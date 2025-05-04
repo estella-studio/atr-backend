@@ -1,8 +1,24 @@
-# leon-backend
+# LEON Backend
 
-## Docker
+## Deploy
 
-Deploy with Docker
+### Local
+
+- Build
+
+```
+go build app/main.go
+```
+
+- Run
+
+```
+./main
+```
+
+> Make sure MySQL is running
+
+### Docker
 
 - Copy and modify `.env`
 
