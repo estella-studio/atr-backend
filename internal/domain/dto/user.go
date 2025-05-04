@@ -11,7 +11,7 @@ type Register struct {
 	Email     string    `json:"email" validate:"omitempty,email"`
 	Username  string    `json:"username" validate:"required,min=3,max=64"`
 	Password  string    `json:"password" validate:"required,min=8,max=256"`
-	Name      string    `json:"name" validate:"omitempty,min=3"`
+	Name      string    `json:"name" validate:"omitempty,min=3,max=128"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
