@@ -2,6 +2,23 @@
 
 ## Deploy
 
+- Copy and modify `.env`
+
+```
+cp .env.example .env; vim .env
+```
+
+|Variable|Value|
+|:---|:---|
+|`APP_PORT`|The backend server will run on this port (make sure to not use well-known port (0 - 1023))|
+|`DB_NAME`|Database name|
+|`DB_USERNAME`|Database user|
+|`DB_PASSWORD`|Database user password|
+|`DB_HOST`|Database host|
+|`DB_PORT`|Database port|
+|`JWT_SECRET_KEY`|JWT secret key|
+|`JWT_EXPIRED_DAYS`|JWT expiration (in days)|
+
 ### Local
 
 - Build
@@ -19,23 +36,6 @@ go build app/main.go
 > Make sure MySQL is running
 
 ### Docker
-
-- Copy and modify `.env`
-
-```
-cp .env.example .env; vim .env
-```
-
-|Variable|Value|
-|:---|:---|
-|`APP_PORT`|The backend server will run on this port (make sure to not use well-known port (0 - 1023))|
-|`DB_NAME`|Database name|
-|`DB_USERNAME`|Database user|
-|`DB_PASSWORD`|Database user password|
-|`DB_HOST`|Database host|
-|`DB_PORT`|Database port|
-|`JWT_SECRET_KEY`|JWT secret key|
-|`JWT_EXPIRED_DAYS`|JWT expiration (in days)|
 
 - Build Docker Image
 
