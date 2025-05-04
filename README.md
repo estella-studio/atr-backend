@@ -43,6 +43,8 @@ docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD
 
 ## API Docs
 
+> Append after `/api/v1/`
+
 |Request|Route Handler|Function|Note|
 |:---|:---|:---|:---|
 |`GET`|/users/info|Get user info|Requires Bearer Token|
