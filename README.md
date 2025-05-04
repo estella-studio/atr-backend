@@ -5,6 +5,7 @@
 Deploy with Docker
 
 - Copy and modify `.env`
+
 `cp .env.example .env; vim .env`
 
 |Variable|Value|
@@ -19,12 +20,15 @@ Deploy with Docker
 |`JWT_EXPIRED_DAYS`|JWT expiration (in days)|
 
 - Build Docker Image
+
 `docker build -t leon-backend:latest .`
 
 - Run Docker Container
+
 `docker run -d --name leon-backend --restart=always --network=host leon-backend:latest`
 
 - Run MySQL Container
+
 `docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=<your root password> -p 3306:3306 --restart=always mysql`
 
 > Check server logs with `docker logs leon-backend`
