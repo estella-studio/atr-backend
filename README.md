@@ -6,7 +6,9 @@ Deploy with Docker
 
 - Copy and modify `.env`
 
-`cp .env.example .env; vim .env`
+```
+cp .env.example .env; vim .env
+```
 
 |Variable|Value|
 |:---|:---|
@@ -21,15 +23,21 @@ Deploy with Docker
 
 - Build Docker Image
 
-`docker build -t leon-backend:latest .`
+```
+docker build -t leon-backend:latest .
+```
 
 - Run Docker Container
 
-`docker run -d --name leon-backend --restart=always --network=host leon-backend:latest`
+```
+docker run -d --name leon-backend --restart=always --network=host leon-backend:latest
+```
 
 - Run MySQL Container
 
-`docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=<your root password> -p 3306:3306 --restart=always mysql`
+```
+docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=<your root password> -p 3306:3306 --restart=always mysql
+```
 
 > Check server logs with `docker logs leon-backend`
 
