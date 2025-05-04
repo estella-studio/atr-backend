@@ -1,0 +1,62 @@
+package entity
+
+import (
+	"time"
+
+	"github.com/estella-studio/leon-backend/internal/domain/dto"
+	"github.com/google/uuid"
+)
+
+type User struct {
+	ID        uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	Email     string    `json:"email" gorm:"type:varchar(128);not null;unique"`
+	Username  string    `json:"username" gorm:"type:varchar(64);not null;unique"`
+	Password  string    `json:"password" gorm:"type:varchar(256);not null"`
+	Name      string    `json:"name" gorm:"type:varchar(128)"`
+	CreatedAt time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"type:timestamp;autoUpdateTime"`
+}
+
+func (u *User) ParseToDTOResponseRegister() dto.ResponseRegister {
+	return dto.ResponseRegister{
+		ID:        u.ID,
+		Email:     u.Email,
+		Username:  u.Username,
+		Name:      u.Name,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func (u *User) ParseToDTOResponseLogin() dto.ResponseLogin {
+	return dto.ResponseLogin{
+		ID:        u.ID,
+		Email:     u.Email,
+		Username:  u.Username,
+		Name:      u.Name,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func (u *User) ParseToADTOResponseGetUserInfoByUsername() dto.ResponseGetUserInfoByUsername {
+	return dto.ResponseGetUserInfoByUsername{
+		ID:        u.ID,
+		Email:     u.Email,
+		Username:  u.Username,
+		Name:      u.Name,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
+
+func (u *User) ParseToDTOResponseUpdateUserInfo() dto.ResponseUpdateUserInfo {
+	return dto.ResponseUpdateUserInfo{
+		ID:        u.ID,
+		Email:     u.Email,
+		Username:  u.Username,
+		Name:      u.Name,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+}
