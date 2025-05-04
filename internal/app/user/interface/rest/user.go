@@ -8,6 +8,7 @@ import (
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -30,6 +31,7 @@ func NewUserHandler(
 
 	routerGroup.Post("/register", userHandler.Register)
 	routerGroup.Post("/login", userHandler.Login)
+	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
 }
 
@@ -100,6 +102,67 @@ func (u *UserHandler) Login(ctx *fiber.Ctx) error {
 	})
 }
 
+func (u *UserHandler) GetUserInfo(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(http.StatusUnauthorized, "user unauthorized")
+	}
+
+	res, err := u.userUseCase.GetUserInfo(userID)
+	if err != nil {
+		return fiber.NewError(http.StatusInternalServerError, "failed to get user info")
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "retrieved user info",
+		"payload": res,
+	})
+}
+
 func (u *UserHandler) UpdateUserInfo(ctx *fiber.Ctx) error {
-	return nil
+	var user dto.UpdateUserInfo
+
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
+	}
+
+	_, err = u.userUseCase.UpdateUserInfo(user, userID)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to update user info",
+		)
+	}
+
+	res, err := u.userUseCase.GetUserInfo(userID)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"user info updated but failed to retrieve updated content")
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "user updated",
+		"payload": res,
+	})
 }

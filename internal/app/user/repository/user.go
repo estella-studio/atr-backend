@@ -10,7 +10,7 @@ type UserMySQLItf interface {
 	Register(user *entity.User) error
 	Login(user *entity.User) error
 	GetUserInfo(user *entity.User) error
-	Update(user *entity.User) error
+	UpdateUserInfo(user *entity.User) error
 	GetUsername(user *entity.User, userParam dto.Login) error
 }
 
@@ -36,7 +36,7 @@ func (r *UserMySQL) GetUserInfo(user *entity.User) error {
 	return r.db.Debug().First(user).Error
 }
 
-func (r *UserMySQL) Update(user *entity.User) error {
+func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 	return r.db.Debug().Updates(user).Error
 }
 

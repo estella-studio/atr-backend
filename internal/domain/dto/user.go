@@ -21,6 +21,13 @@ type Login struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+type UpdateUserInfo struct {
+	Email    string `json:"email" validate:"omitempty,email"`
+	Username string `json:"username" validate:"omitempty,min=3"`
+	Password string `json:"password" validate:"omitempty,min=8"`
+	Name     string `json:"name" validate:"omitempty,min=3"`
+}
+
 type ResponseRegister struct {
 	ID        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
@@ -39,7 +46,7 @@ type ResponseLogin struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type ResponseGetUserInfoByUsername struct {
+type ResponseGetUserInfo struct {
 	ID        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
 	Username  string    `json:"username"`

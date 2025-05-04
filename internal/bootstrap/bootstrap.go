@@ -13,7 +13,10 @@ import (
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cache"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/idempotency"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
 
 func Start() error {
@@ -54,11 +57,15 @@ func Start() error {
 	middleware := middleware.NewMiddleware(*jwt)
 
 	app.Use(
-		cors.New(cors.Config{
-			AllowHeaders: "*",
-			AllowOrigins: "*",
-			AllowMethods: "*",
-		}),
+		cors.New(
+			cors.Config{
+				AllowHeaders: "*",
+				AllowOrigins: "*",
+				AllowMethods: "*",
+			}),
+		cache.New(),
+		idempotency.New(),
+		limiter.New(),
 	)
 
 	v1 := app.Group("/api/v1")

@@ -39,8 +39,8 @@ func (u *User) ParseToDTOResponseLogin() dto.ResponseLogin {
 	}
 }
 
-func (u *User) ParseToADTOResponseGetUserInfoByUsername() dto.ResponseGetUserInfoByUsername {
-	return dto.ResponseGetUserInfoByUsername{
+func (u *User) ParseToADTOResponseGetUserInfo() dto.ResponseGetUserInfo {
+	return dto.ResponseGetUserInfo{
 		ID:        u.ID,
 		Email:     u.Email,
 		Username:  u.Username,

@@ -12,6 +12,8 @@ import (
 type UserUseCaseItf interface {
 	Register(register dto.Register) (dto.ResponseRegister, error)
 	Login(login dto.Login) (dto.ResponseLogin, string, error)
+	GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error)
+	UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error)
 }
 
 type UserUseCase struct {
@@ -78,4 +80,35 @@ func (u *UserUseCase) Login(login dto.Login) (dto.ResponseLogin, string, error) 
 	}
 
 	return user.ParseToDTOResponseLogin(), token, nil
+}
+
+func (u *UserUseCase) GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error) {
+	user := entity.User{
+		ID: userID,
+	}
+
+	err := u.userRepo.GetUserInfo(&user)
+	if err != nil {
+		return dto.ResponseGetUserInfo{},
+			err
+	}
+
+	return user.ParseToADTOResponseGetUserInfo(), nil
+}
+
+func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error) {
+	user := entity.User{
+		ID:       userID,
+		Email:    updateUserInfo.Email,
+		Username: updateUserInfo.Username,
+		Name:     updateUserInfo.Name,
+	}
+
+	err := u.userRepo.UpdateUserInfo(&user)
+	if err != nil {
+		return dto.ResponseUpdateUserInfo{},
+			err
+	}
+
+	return user.ParseToDTOResponseUpdateUserInfo(), nil
 }

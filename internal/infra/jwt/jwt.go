@@ -14,8 +14,9 @@ type JWTItf interface {
 }
 
 type JWT struct {
-	secretKey   string
-	expiredTime uint
+	secretKey      string
+	expiredTime    uint
+	GoogleClientID string
 }
 
 type Claims struct {
@@ -23,18 +24,15 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-type GoogleClaims struct {
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-}
-
 func NewJWT(env *env.Env) *JWT {
 	secretKey := env.JWTSecretKey
 	expiredTime := env.JWTExpiredDays
+	googleClientID := env.GoogleClientID
 
 	return &JWT{
-		secretKey:   secretKey,
-		expiredTime: expiredTime,
+		secretKey:      secretKey,
+		expiredTime:    expiredTime,
+		GoogleClientID: googleClientID,
 	}
 }
 
@@ -43,7 +41,7 @@ func (j *JWT) GenerateToken(userID uuid.UUID) (string, error) {
 		ID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(
-				time.Now().Add(time.Duration(j.expiredTime * 24)),
+				time.Now().Add(time.Hour * 24 * time.Duration(j.expiredTime)),
 			),
 		},
 	}
@@ -59,9 +57,9 @@ func (j *JWT) GenerateToken(userID uuid.UUID) (string, error) {
 }
 
 func (j *JWT) ValidateToken(tokenString string) (uuid.UUID, error) {
-	var claim Claims
+	var claims Claims
 
-	token, err := jwt.ParseWithClaims(tokenString, &claim, func(token *jwt.Token) (any, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
 		return []byte(j.secretKey), nil
 	})
 	if err != nil {
@@ -72,7 +70,7 @@ func (j *JWT) ValidateToken(tokenString string) (uuid.UUID, error) {
 		return uuid.Nil, err
 	}
 
-	userID := claim.ID
+	userID := claims.ID
 
 	return userID, nil
 }

@@ -14,6 +14,7 @@ type Env struct {
 	DBPort         uint   `env:"DB_PORT"`
 	JWTSecretKey   string `env:"JWT_SECRET_KEY"`
 	JWTExpiredDays uint   `env:"JWT_EXPIRED_DAYS"`
+	GoogleClientID string `env:"GOOGLE_CLIENT_ID"`
 }
 
 func New() (*Env, error) {
