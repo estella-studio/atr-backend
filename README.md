@@ -35,6 +35,9 @@ docker run -d --name leon-backend --restart=always --network=host leon-backend:l
 
 - Run MySQL Container
 
+> > [!IMPORTANT]
+> Change `<your root password>` with your MySQL root password
+
 ```
 docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=<your root password> -p 3306:3306 --restart=always mysql
 ```
