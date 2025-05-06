@@ -12,6 +12,7 @@ type UserMySQLItf interface {
 	GetUserInfo(user *entity.User) error
 	UpdateUserInfo(user *entity.User) error
 	GetUsername(user *entity.User, userParam dto.Login) error
+	SoftDelete(user *entity.User) error
 }
 
 type UserMySQL struct {
@@ -42,4 +43,8 @@ func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 
 func (r *UserMySQL) GetUsername(user *entity.User, userParam dto.Login) error {
 	return r.db.Debug().First(&user, userParam).Error
+}
+
+func (r *UserMySQL) SoftDelete(user *entity.User) error {
+	return r.db.Debug().Delete(&user).Error
 }
