@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	pinghandler "github.com/estella-studio/leon-backend/internal/app/ping/interface/rest"
 	userhandler "github.com/estella-studio/leon-backend/internal/app/user/interface/rest"
 	userrepository "github.com/estella-studio/leon-backend/internal/app/user/repository"
 	userusecase "github.com/estella-studio/leon-backend/internal/app/user/usecase"
@@ -70,6 +71,7 @@ func Start() error {
 
 	v1 := app.Group("/api/v1")
 
+	pinghandler.NewPingHandler(v1)
 	userRepository := userrepository.NewUserMySQL(database)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase)
