@@ -14,6 +14,7 @@ type UserUseCaseItf interface {
 	Login(login dto.Login) (dto.ResponseLogin, string, error)
 	GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error)
 	UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error)
+	SoftDelete(userID uuid.UUID) error
 }
 
 type UserUseCase struct {
@@ -111,4 +112,14 @@ func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID u
 	}
 
 	return user.ParseToDTOResponseUpdateUserInfo(), nil
+}
+
+func (u *UserUseCase) SoftDelete(userID uuid.UUID) error {
+	user := entity.User{
+		ID: userID,
+	}
+
+	err := u.userRepo.SoftDelete(&user)
+
+	return err
 }

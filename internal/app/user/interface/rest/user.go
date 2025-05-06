@@ -33,6 +33,7 @@ func NewUserHandler(
 	routerGroup.Post("/login", userHandler.Login)
 	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
+	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
 }
 
 func (u *UserHandler) Register(ctx *fiber.Ctx) error {
@@ -105,12 +106,18 @@ func (u *UserHandler) Login(ctx *fiber.Ctx) error {
 func (u *UserHandler) GetUserInfo(ctx *fiber.Ctx) error {
 	userID, err := uuid.Parse(ctx.Locals("userID").(string))
 	if err != nil {
-		return fiber.NewError(http.StatusUnauthorized, "user unauthorized")
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
 	}
 
 	res, err := u.userUseCase.GetUserInfo(userID)
 	if err != nil {
-		return fiber.NewError(http.StatusInternalServerError, "failed to get user info")
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to get user info",
+		)
 	}
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -164,5 +171,27 @@ func (u *UserHandler) UpdateUserInfo(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "user updated",
 		"payload": res,
+	})
+}
+
+func (u *UserHandler) SoftDelete(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
+	}
+
+	err = u.userUseCase.SoftDelete(userID)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to delete user",
+		)
+	}
+
+	return ctx.Status(http.StatusNoContent).JSON(fiber.Map{
+		"message": "user deleted",
 	})
 }
