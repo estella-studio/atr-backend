@@ -19,6 +19,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/idempotency"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func Start() error {
@@ -34,8 +35,7 @@ func Start() error {
 		config.DBUsername,
 		config.DBPassword,
 		config.DBHost,
-		config.DBPort,
-		config.DBName,
+		config.DBPort, config.DBName,
 	))
 	if err != nil {
 		return err
@@ -59,18 +59,26 @@ func Start() error {
 	middleware := middleware.NewMiddleware(*jwt)
 
 	app.Use(
+		cache.New(),
+		idempotency.New(),
 		cors.New(
 			cors.Config{
 				AllowHeaders: "*",
 				AllowOrigins: "*",
 				AllowMethods: "*",
 			}),
-		cache.New(),
-		idempotency.New(),
-		limiter.New(limiter.Config{
-			Max:        config.LimiterMax,
-			Expiration: time.Duration(config.LimiterExpirationMinute) * 60,
-		}))
+		limiter.New(
+			limiter.Config{
+				Max:               config.LimiterMax,
+				Expiration:        time.Duration(config.LimiterExpirationMinute) * 60,
+				LimiterMiddleware: limiter.SlidingWindow{},
+			}),
+		logger.New(
+			logger.Config{
+				Format: "${ip} - - [${time}] ${method} ${url} ${protocol} ${status} ${bytesSent} ${referer} ${ua}\n",
+			},
+		),
+	)
 
 	v1 := app.Group("/api/v1")
 
