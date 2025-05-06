@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"fmt"
 	"log"
+	"time"
 
 	pinghandler "github.com/estella-studio/leon-backend/internal/app/ping/interface/rest"
 	userhandler "github.com/estella-studio/leon-backend/internal/app/user/interface/rest"
@@ -66,8 +67,10 @@ func Start() error {
 			}),
 		cache.New(),
 		idempotency.New(),
-		limiter.New(),
-	)
+		limiter.New(limiter.Config{
+			Max:        config.LimiterMax,
+			Expiration: time.Duration(config.LimiterExpirationMinute) * 60,
+		}))
 
 	v1 := app.Group("/api/v1")
 
