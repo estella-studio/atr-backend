@@ -13,7 +13,8 @@ func (m *Middleware) Authentication(ctx *fiber.Ctx) error {
 	if len(authToken) < 1 {
 		return fiber.NewError(
 			http.StatusUnauthorized,
-			"user unaouthorized")
+			"user unaouthorized",
+		)
 	}
 
 	bearertoken := authToken[0]
@@ -23,7 +24,8 @@ func (m *Middleware) Authentication(ctx *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(
 			http.StatusUnauthorized,
-			"token invalid")
+			"token invalid",
+		)
 	}
 
 	ctx.Locals("userID", userID.String())
