@@ -8,6 +8,7 @@ import (
 type DataMySQLItf interface {
 	Add(data *entity.Data) error
 	Retrieve(data *entity.Data) error
+	List(data *[]entity.Data) error
 }
 
 type DataMySQL struct {
@@ -25,5 +26,9 @@ func (r *DataMySQL) Add(data *entity.Data) error {
 }
 
 func (r *DataMySQL) Retrieve(data *entity.Data) error {
-	return r.db.Debug().First(data).Error
+	return r.db.Debug().Select("data").First(data).Error
+}
+
+func (r *DataMySQL) List(data *[]entity.Data) error {
+	return r.db.Debug().Select("id", "created_at").Find(data).Error
 }

@@ -34,7 +34,9 @@ func (r *UserMySQL) Login(user *entity.User) error {
 }
 
 func (r *UserMySQL) GetUserInfo(user *entity.User) error {
-	return r.db.Debug().First(user).Error
+	return r.db.Debug().
+		Select("id", "email", "username", "name", "created_at", "updated_at").
+		First(user).Error
 }
 
 func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
