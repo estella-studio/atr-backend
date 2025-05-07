@@ -10,7 +10,7 @@ import (
 type Data struct {
 	ID        uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
 	UserID    uuid.UUID `json:"user_id" gorm:"type:char(36)"`
-	Data      []byte    `json:"data" gorm:"type:blob"`
+	Data      []byte    `json:"data" gorm:"type:mediumblob"`
 	CreatedAt time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 }
 
