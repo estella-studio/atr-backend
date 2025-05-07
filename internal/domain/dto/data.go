@@ -26,3 +26,8 @@ type ResponseAdd struct {
 type ResponseRetrieve struct {
 	Data []byte `json:"data"`
 }
+
+type ResponseList struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+}

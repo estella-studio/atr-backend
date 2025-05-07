@@ -11,6 +11,7 @@ import (
 type DataUseCaseItf interface {
 	Add(add dto.Add) (dto.ResponseAdd, error)
 	Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, error)
+	List(userID uuid.UUID) (*[]dto.ResponseList, error)
 }
 
 type DataUseCase struct {
@@ -52,4 +53,21 @@ func (d *DataUseCase) Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, err
 	}
 
 	return data.ParseToDTOResponseRetrieve(), nil
+}
+
+func (d *DataUseCase) List(userID uuid.UUID) (*[]dto.ResponseList, error) {
+	data := new([]entity.Data)
+
+	err := d.dataRepo.List(data)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]dto.ResponseList, len(*data))
+
+	for i, data := range *data {
+		res[i] = data.ParseToDTOResponseList()
+	}
+
+	return &res, nil
 }

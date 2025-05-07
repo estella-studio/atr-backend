@@ -27,3 +27,10 @@ func (d *Data) ParseToDTOResponseRetrieve() dto.ResponseRetrieve {
 		Data: d.Data,
 	}
 }
+
+func (d *Data) ParseToDTOResponseList() dto.ResponseList {
+	return dto.ResponseList{
+		ID:        d.ID,
+		CreatedAt: d.CreatedAt,
+	}
+}

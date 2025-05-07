@@ -29,6 +29,7 @@ func NewDataHandler(
 
 	routerGroup.Post("/add", middleware.Authentication, dataHandler.Add)
 	routerGroup.Get("/get", middleware.Authentication, dataHandler.Retrieve)
+	routerGroup.Get("/list", middleware.Authentication, dataHandler.List)
 }
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
@@ -115,5 +116,28 @@ func (d *DataHandler) Retrieve(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "retrieved save data",
 		"payload": res,
+	})
+}
+
+func (d *DataHandler) List(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
+	}
+
+	res, err := d.DataUseCase.List(userID)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to retrieve save data list",
+		)
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "retrieved save data list",
+		"Payload": res,
 	})
 }
