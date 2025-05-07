@@ -12,6 +12,11 @@ type Add struct {
 	Data   []byte    `json:"data"`
 }
 
+type Retrieve struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
 type ResponseAdd struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
@@ -19,8 +24,5 @@ type ResponseAdd struct {
 }
 
 type ResponseRetrieve struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Data      []byte    `json:"data"`
-	CreatedAt time.Time `json:"created_at"`
+	Data []byte `json:"data"`
 }

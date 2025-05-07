@@ -10,6 +10,7 @@ import (
 
 type DataUseCaseItf interface {
 	Add(add dto.Add) (dto.ResponseAdd, error)
+	Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, error)
 }
 
 type DataUseCase struct {
@@ -37,4 +38,18 @@ func (d *DataUseCase) Add(add dto.Add) (dto.ResponseAdd, error) {
 	}
 
 	return data.ParseToDTOResponseAdd(), nil
+}
+
+func (d *DataUseCase) Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, error) {
+	data := entity.Data{
+		ID:     retrieve.ID,
+		UserID: retrieve.UserID,
+	}
+
+	err := d.dataRepo.Retrieve(&data)
+	if err != nil {
+		return dto.ResponseRetrieve{}, err
+	}
+
+	return data.ParseToDTOResponseRetrieve(), nil
 }

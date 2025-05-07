@@ -24,9 +24,6 @@ func (d *Data) ParseToDTOResponseAdd() dto.ResponseAdd {
 
 func (d *Data) ParseToDTOResponseRetrieve() dto.ResponseRetrieve {
 	return dto.ResponseRetrieve{
-		ID:        d.ID,
-		UserID:    d.UserID,
-		Data:      d.Data,
-		CreatedAt: d.CreatedAt,
+		Data: d.Data,
 	}
 }
