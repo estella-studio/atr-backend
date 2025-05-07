@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/bytedance/sonic"
 	datahandler "github.com/estella-studio/leon-backend/internal/app/data/interface/rest"
 	datarepository "github.com/estella-studio/leon-backend/internal/app/data/repository"
 	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
@@ -38,7 +39,8 @@ func Start() (*fiber.App, uint, error) {
 		config.DBUsername,
 		config.DBPassword,
 		config.DBHost,
-		config.DBPort, config.DBName,
+		config.DBPort,
+		config.DBName,
 	))
 	if err != nil {
 		return nil, 0, err
@@ -55,7 +57,12 @@ func Start() (*fiber.App, uint, error) {
 
 	val := validator.New()
 
-	app := fiber.New()
+	app := fiber.New(
+		fiber.Config{
+			JSONEncoder: sonic.Marshal,
+			JSONDecoder: sonic.Unmarshal,
+		},
+	)
 
 	jwt := jwt.NewJWT(config)
 
