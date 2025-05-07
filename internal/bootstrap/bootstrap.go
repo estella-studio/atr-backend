@@ -25,10 +25,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func Start() error {
+func Start() (*fiber.App, uint, error) {
 	config, err := env.New()
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
 	log.Println("loaded config")
@@ -41,14 +41,14 @@ func Start() error {
 		config.DBPort, config.DBName,
 	))
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
 	log.Println("database connected")
 
 	err = mysql.Migrate(database)
 	if err != nil {
-		log.Println(err)
+		return nil, 0, err
 	} else {
 		log.Println("database migration complete")
 	}
@@ -95,5 +95,5 @@ func Start() error {
 
 	log.Printf("listening on port %d", config.AppPort)
 
-	return app.Listen(fmt.Sprintf(":%d", config.AppPort))
+	return app, config.AppPort, nil
 }
