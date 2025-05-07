@@ -17,6 +17,7 @@ type User struct {
 	CreatedAt time.Time      `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"type:timestamp;autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
+	Data      []Data
 }
 
 func (u *User) ParseToDTOResponseRegister() dto.ResponseRegister {
@@ -41,7 +42,7 @@ func (u *User) ParseToDTOResponseLogin() dto.ResponseLogin {
 	}
 }
 
-func (u *User) ParseToADTOResponseGetUserInfo() dto.ResponseGetUserInfo {
+func (u *User) ParseToDTOResponseGetUserInfo() dto.ResponseGetUserInfo {
 	return dto.ResponseGetUserInfo{
 		ID:        u.ID,
 		Email:     u.Email,

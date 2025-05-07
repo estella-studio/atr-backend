@@ -94,7 +94,7 @@ func (u *UserUseCase) GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, er
 			err
 	}
 
-	return user.ParseToADTOResponseGetUserInfo(), nil
+	return user.ParseToDTOResponseGetUserInfo(), nil
 }
 
 func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error) {

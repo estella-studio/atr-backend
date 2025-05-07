@@ -5,6 +5,9 @@ import (
 	"log"
 	"time"
 
+	datahandler "github.com/estella-studio/leon-backend/internal/app/data/interface/rest"
+	datarepository "github.com/estella-studio/leon-backend/internal/app/data/repository"
+	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
 	pinghandler "github.com/estella-studio/leon-backend/internal/app/ping/interface/rest"
 	userhandler "github.com/estella-studio/leon-backend/internal/app/user/interface/rest"
 	userrepository "github.com/estella-studio/leon-backend/internal/app/user/repository"
@@ -86,6 +89,9 @@ func Start() error {
 	userRepository := userrepository.NewUserMySQL(database)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase)
+	dataRepository := datarepository.NewDataMySQL(database)
+	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
+	datahandler.NewDataHandler(v1, middleware, dataUseCase)
 
 	log.Printf("listening on port %d", config.AppPort)
 
