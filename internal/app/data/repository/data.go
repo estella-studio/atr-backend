@@ -1,14 +1,15 @@
 package repository
 
 import (
+	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/domain/entity"
 	"gorm.io/gorm"
 )
 
 type DataMySQLItf interface {
 	Add(data *entity.Data) error
-	Retrieve(data *entity.Data) error
-	List(data *[]entity.Data) error
+	Retrieve(data *entity.Data, userParam dto.Retrieve) error
+	List(data *[]entity.Data, userParam dto.List) error
 }
 
 type DataMySQL struct {
@@ -27,16 +28,16 @@ func (r *DataMySQL) Add(data *entity.Data) error {
 		Error
 }
 
-func (r *DataMySQL) Retrieve(data *entity.Data) error {
+func (r *DataMySQL) Retrieve(data *entity.Data, userParam dto.Retrieve) error {
 	return r.db.Debug().
 		Select("data").
-		First(data).
+		First(data, userParam).
 		Error
 }
 
-func (r *DataMySQL) List(data *[]entity.Data) error {
+func (r *DataMySQL) List(data *[]entity.Data, userParam dto.List) error {
 	return r.db.Debug().
 		Select("id", "created_at").
-		Find(data).
+		Find(data, userParam).
 		Error
 }

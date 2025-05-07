@@ -47,7 +47,7 @@ func (d *DataUseCase) Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, err
 		UserID: retrieve.UserID,
 	}
 
-	err := d.dataRepo.Retrieve(&data)
+	err := d.dataRepo.Retrieve(&data, dto.Retrieve{UserID: retrieve.UserID})
 	if err != nil {
 		return dto.ResponseRetrieve{}, err
 	}
@@ -58,7 +58,7 @@ func (d *DataUseCase) Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, err
 func (d *DataUseCase) List(userID uuid.UUID) (*[]dto.ResponseList, error) {
 	data := new([]entity.Data)
 
-	err := d.dataRepo.List(data)
+	err := d.dataRepo.List(data, dto.List{UserID: userID})
 	if err != nil {
 		return nil, err
 	}
