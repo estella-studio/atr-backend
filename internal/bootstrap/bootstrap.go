@@ -98,7 +98,7 @@ func Start() (*fiber.App, uint, error) {
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase)
 	dataRepository := datarepository.NewDataMySQL(database)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
-	datahandler.NewDataHandler(v1, middleware, dataUseCase)
+	datahandler.NewDataHandler(v1, val, middleware, dataUseCase)
 
 	log.Printf("listening on port %d", config.AppPort)
 

@@ -3,24 +3,28 @@ package rest
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/estella-studio/leon-backend/internal/app/data/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/middleware"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
 type DataHandler struct {
+	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
 	DataUseCase usecase.DataUseCaseItf
 }
 
 func NewDataHandler(
-	routerGroup fiber.Router, middleware middleware.MiddlewareItf,
-	dataUseCase usecase.DataUseCaseItf,
+	routerGroup fiber.Router, validator *validator.Validate,
+	middleware middleware.MiddlewareItf, dataUseCase usecase.DataUseCaseItf,
 ) {
 	dataHandler := DataHandler{
+		Validator:   validator,
 		Middleware:  middleware,
 		DataUseCase: dataUseCase,
 	}
@@ -30,6 +34,7 @@ func NewDataHandler(
 	routerGroup.Post("/add", middleware.Authentication, dataHandler.Add)
 	routerGroup.Get("/get", middleware.Authentication, dataHandler.Retrieve)
 	routerGroup.Get("/list", middleware.Authentication, dataHandler.List)
+	routerGroup.Get("/listpaged", middleware.Authentication, dataHandler.ListPaged)
 }
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
@@ -103,6 +108,14 @@ func (d *DataHandler) Retrieve(ctx *fiber.Ctx) error {
 		)
 	}
 
+	err = d.Validator.Struct(retrieve)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
 	retrieve.UserID = userID
 
 	res, err := d.DataUseCase.Retrieve(retrieve)
@@ -138,6 +151,47 @@ func (d *DataHandler) List(ctx *fiber.Ctx) error {
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "retrieved save data list",
-		"Payload": res,
+		"payload": res,
+	})
+}
+
+func (d *DataHandler) ListPaged(ctx *fiber.Ctx) error {
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
+	}
+
+	q := ctx.Queries()
+
+	offset, err := strconv.Atoi(q["offset"])
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"offset query required",
+		)
+	}
+
+	limit, err := strconv.Atoi(q["limit"])
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"limit query required",
+		)
+	}
+
+	res, err := d.DataUseCase.ListPaged(userID, offset, limit)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to retrieve save data list",
+		)
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "retrieved save data list",
+		"payload": res,
 	})
 }
