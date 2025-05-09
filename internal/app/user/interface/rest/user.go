@@ -2,6 +2,7 @@ package rest
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/estella-studio/leon-backend/internal/app/user/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
@@ -155,6 +156,13 @@ func (u *UserHandler) UpdateUserInfo(ctx *fiber.Ctx) error {
 
 	_, err = u.UserUseCase.UpdateUserInfo(user, userID)
 	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return fiber.NewError(
+				http.StatusConflict,
+				"please use another email / username",
+			)
+		}
+
 		return fiber.NewError(
 			http.StatusInternalServerError,
 			"failed to update user info",

@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/estella-studio/leon-backend/internal/app/data/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
@@ -120,6 +121,13 @@ func (d *DataHandler) Retrieve(ctx *fiber.Ctx) error {
 
 	res, err := d.DataUseCase.Retrieve(retrieve)
 	if err != nil {
+		if strings.Contains(err.Error(), "record not found") {
+			return fiber.NewError(
+				http.StatusNotFound,
+				"no save data found with current id",
+			)
+		}
+
 		return fiber.NewError(
 			http.StatusInternalServerError,
 			"failed to retrieve save data",
@@ -147,6 +155,12 @@ func (d *DataHandler) List(ctx *fiber.Ctx) error {
 			http.StatusInternalServerError,
 			"failed to retrieve save data list",
 		)
+	}
+
+	if len(*res) == 0 {
+		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
+			"message": "no save data found",
+		})
 	}
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
@@ -190,6 +204,11 @@ func (d *DataHandler) ListPaged(ctx *fiber.Ctx) error {
 		)
 	}
 
+	if len(*res) == 0 {
+		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
+			"message": "no save data found",
+		})
+	}
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "retrieved save data list",
 		"payload": res,
