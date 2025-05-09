@@ -27,12 +27,10 @@ type Claims struct {
 func NewJWT(env *env.Env) *JWT {
 	secretKey := env.JWTSecretKey
 	expiredTime := env.JWTExpiredDays
-	googleClientID := env.GoogleClientID
 
 	return &JWT{
-		secretKey:      secretKey,
-		expiredTime:    expiredTime,
-		GoogleClientID: googleClientID,
+		secretKey:   secretKey,
+		expiredTime: expiredTime,
 	}
 }
 

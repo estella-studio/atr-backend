@@ -26,25 +26,38 @@ func NewUserMySQL(db *gorm.DB) UserMySQLItf {
 }
 
 func (r *UserMySQL) Register(user *entity.User) error {
-	return r.db.Debug().Create(user).Error
+	return r.db.Debug().
+		Create(user).
+		Error
 }
 
 func (r *UserMySQL) Login(user *entity.User) error {
-	return r.db.Debug().First(user).Error
+	return r.db.Debug().
+		First(user).
+		Error
 }
 
 func (r *UserMySQL) GetUserInfo(user *entity.User) error {
-	return r.db.Debug().First(user).Error
+	return r.db.Debug().
+		Select("id", "email", "username", "name", "created_at", "updated_at").
+		First(user).
+		Error
 }
 
 func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
-	return r.db.Debug().Updates(user).Error
+	return r.db.Debug().
+		Updates(user).
+		Error
 }
 
 func (r *UserMySQL) GetUsername(user *entity.User, userParam dto.Login) error {
-	return r.db.Debug().First(&user, userParam).Error
+	return r.db.Debug().
+		First(&user, userParam).
+		Error
 }
 
 func (r *UserMySQL) SoftDelete(user *entity.User) error {
-	return r.db.Debug().Delete(&user).Error
+	return r.db.Debug().
+		Delete(&user).
+		Error
 }

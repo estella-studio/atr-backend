@@ -2,6 +2,7 @@ package rest
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/estella-studio/leon-backend/internal/app/user/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
@@ -14,7 +15,7 @@ import (
 type UserHandler struct {
 	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
-	userUseCase usecase.UserUseCaseItf
+	UserUseCase usecase.UserUseCaseItf
 }
 
 func NewUserHandler(
@@ -24,7 +25,7 @@ func NewUserHandler(
 	userHandler := UserHandler{
 		Validator:   validator,
 		Middleware:  middleware,
-		userUseCase: userUseCase,
+		UserUseCase: userUseCase,
 	}
 
 	routerGroup = routerGroup.Group("/users")
@@ -55,7 +56,7 @@ func (u *UserHandler) Register(ctx *fiber.Ctx) error {
 		)
 	}
 
-	res, err := u.userUseCase.Register(register)
+	res, err := u.UserUseCase.Register(register)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusUnauthorized,
@@ -88,7 +89,7 @@ func (u *UserHandler) Login(ctx *fiber.Ctx) error {
 		)
 	}
 
-	res, token, err := u.userUseCase.Login(login)
+	res, token, err := u.UserUseCase.Login(login)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusUnauthorized,
@@ -112,7 +113,7 @@ func (u *UserHandler) GetUserInfo(ctx *fiber.Ctx) error {
 		)
 	}
 
-	res, err := u.userUseCase.GetUserInfo(userID)
+	res, err := u.UserUseCase.GetUserInfo(userID)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,
@@ -153,15 +154,22 @@ func (u *UserHandler) UpdateUserInfo(ctx *fiber.Ctx) error {
 		)
 	}
 
-	_, err = u.userUseCase.UpdateUserInfo(user, userID)
+	_, err = u.UserUseCase.UpdateUserInfo(user, userID)
 	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return fiber.NewError(
+				http.StatusConflict,
+				"please use another email / username",
+			)
+		}
+
 		return fiber.NewError(
 			http.StatusInternalServerError,
 			"failed to update user info",
 		)
 	}
 
-	res, err := u.userUseCase.GetUserInfo(userID)
+	res, err := u.UserUseCase.GetUserInfo(userID)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,
@@ -183,7 +191,7 @@ func (u *UserHandler) SoftDelete(ctx *fiber.Ctx) error {
 		)
 	}
 
-	err = u.userUseCase.SoftDelete(userID)
+	err = u.UserUseCase.SoftDelete(userID)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,

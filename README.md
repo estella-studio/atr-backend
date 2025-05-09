@@ -10,6 +10,8 @@ cp .env.example .env; vim .env
 
 |Variable|Value|
 |:---|:---|
+|`LIMITER_MAX`|Max number of recent connections during `LIMITER_EXPIRATION_MINUTE` before sending a 429 response|
+|`LIMITER_EXPIRATION_MINUTE`|Time before resetting the `LIMITER_MAX` count|
 |`APP_PORT`|The backend server will run on this port (make sure to not use well-known port (0 - 1023))|
 |`DB_NAME`|Database name|
 |`DB_USERNAME`|Database user|
@@ -51,8 +53,7 @@ docker run -d --name leon-backend --restart=always --network=host leon-backend:l
 
 - Run MySQL Container
 
-> > [IMPORTANT]
-
+> [IMPORTANT]
 > Change `<your root password>` with your MySQL root password
 
 ```
@@ -67,10 +68,16 @@ docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD
 
 |Request|Route Handler|Function|Note|
 |:---|:---|:---|:---|
+|`GET`|/ping|Test server latency|Any request body will be ignored|
 |`GET`|/users/info|Get user info|Requires Bearer Token|
+|`GET`|/data/get|Get save data from save id|Requires Bearer Token|
+|`GET`|/data/list|List save data|Requires Bearer Token|
+|`GET`|/data/listpaged/?offset=`n`&limit=`n`|List save data (paged)|Requires Bearer Token|
 |`POST`|/users/register|Register new user|-|
 |`POST`|/users/login|Login|-|
+|`POST`|/data/add|Upload / save data to database|Requires Bearer Token, `form-data` key must be equal to `data`. Only 1 data can be accepted per request|
 |`PATCH`|/users/update|Update user info|Requires Bearer Token|
+|`DELETE`|/users/delete|Soft delete user|Requires Bearer Token|
 
 ### Sample API Response
 
@@ -94,6 +101,70 @@ None
         "updated_at": "2025-05-04T17:24:06+07:00"
     },
     "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJJRCI6ImMzYWVkMmQxLWEwMDktNGU5OS1iMDVkLWMyNmFjOGZkZWZmOCIsImV4cCI6MTc0ODk0NjQwOX0.IdG3w3aJpvBfeBYQWxNnLS27WdDnzm7_YOKpDZQ5_VJE1XqqMFDzfp5zUQwp0WHA6BIR9w3MGxOd0G3cqgXVOg"
+}
+```
+
+#### Retrieve Save Data `/data/get`
+
+- Request Body
+
+|Key|Type|Min|Max|Required|
+|:---|:---|:---|:---|:---|
+|id|string|36|36|required|
+
+- Response Body
+
+```json
+{
+    "message": "retrieved save data",
+    "payload": {
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAj....."
+    }
+}
+
+```
+
+#### List Save Data `/data/list`
+
+- Request Body
+
+None
+
+- Response Body
+
+```json
+{
+    "message": "retrieved save data list",
+    "payload": [
+        {
+            "id": "961f080a-62b0-40c4-a266-4d41edb58b45",
+            "created_at": "2025-05-09T07:48:51+07:00"
+        },
+        {
+            "id": "ad91ae46-15f7-484c-bbf3-83e59d1cb9e6",
+            "created_at": "2025-05-07T16:51:02+07:00"
+        }
+    ]
+}
+```
+
+#### List Save Data Paged `/data/listpaged/?offset=n&limit=n`
+
+- Request Body
+
+None
+
+- Response Body
+
+```json
+{
+    "message": "retrieved save data list",
+    "payload": [
+        {
+            "id": "0f28309e-6b27-40f8-8943-0ebaca4806f9",
+            "created_at": "2025-05-07T11:46:32+07:00"
+        }
+    ]
 }
 ```
 
@@ -166,6 +237,28 @@ None
 }
 ```
 
+#### Upload Data `/data/add`
+
+- Request Body (`form-data`)
+
+|Key|Type|Value|Required|
+|:---|:---|:---|:---|
+|`data`|File|any file|required|
+
+- Response Body
+
+```json
+{
+    "message": "data saved",
+    "payload": {
+        "id": "961f080a-62b0-40c4-a266-4d41edb58b45",
+        "user_id": "dca0ba20-a4f1-42c2-87db-2ac087449ef1",
+        "created_at": "2025-05-09T07:48:51.159+07:00"
+    }
+}
+
+```
+
 #### Update User `/users/update`
 
 - Request Body
@@ -201,3 +294,13 @@ None
     }
 }
 ```
+
+#### Soft Delete User `/users/delete`
+
+- Request Body
+
+None
+
+- Response Body
+
+None
