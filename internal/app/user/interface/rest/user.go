@@ -34,6 +34,7 @@ func NewUserHandler(
 	routerGroup.Post("/login", userHandler.Login)
 	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
+	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
 	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
 }
 
@@ -180,6 +181,32 @@ func (u *UserHandler) UpdateUserInfo(ctx *fiber.Ctx) error {
 		"message": "user updated",
 		"payload": res,
 	})
+}
+
+func (u *UserHandler) ResetPassword(ctx *fiber.Ctx) error {
+	var user dto.ResetPassword
+
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	_ = u.UserUseCase.ResetPassword(user)
+
+	// TODO: Handle reset password
+
+	return ctx.Status(http.StatusOK).Context().Err()
 }
 
 func (u *UserHandler) SoftDelete(ctx *fiber.Ctx) error {

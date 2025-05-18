@@ -14,6 +14,7 @@ type UserUseCaseItf interface {
 	Login(login dto.Login) (dto.ResponseLogin, string, error)
 	GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error)
 	UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error)
+	ResetPassword(resetPassword dto.ResetPassword) error
 	SoftDelete(userID uuid.UUID) error
 }
 
@@ -112,6 +113,16 @@ func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID u
 	}
 
 	return user.ParseToDTOResponseUpdateUserInfo(), nil
+}
+
+func (u *UserUseCase) ResetPassword(resetPassword dto.ResetPassword) error {
+	user := entity.User{
+		Email: resetPassword.Email,
+	}
+
+	err := u.userRepo.ResetPassword(&user, dto.ResetPassword{Email: resetPassword.Email})
+
+	return err
 }
 
 func (u *UserUseCase) SoftDelete(userID uuid.UUID) error {

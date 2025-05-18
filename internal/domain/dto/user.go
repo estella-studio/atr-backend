@@ -8,15 +8,15 @@ import (
 
 type Register struct {
 	ID       uuid.UUID `json:"id"`
-	Email    string    `json:"email" validate:"omitempty,email"`
-	Username string    `json:"username" validate:"required,min=3,max=64"`
-	Password string    `json:"password" validate:"required,min=8,max=256"`
+	Email    string    `json:"email" validate:"required,email"`
+	Username string    `json:"username" validate:"required,min=4,max=20"`
+	Password string    `json:"password" validate:"required,min=4"`
 	Name     string    `json:"name" validate:"omitempty,min=3,max=128"`
 }
 
 type Login struct {
-	Username string `json:"username" validate:"required,min=3"`
-	Password string `json:"password" validate:"required,min=8"`
+	Username string `json:"username" validate:"required,min=4"`
+	Password string `json:"password" validate:"required,min=4"`
 }
 
 type UpdateUserInfo struct {
@@ -24,6 +24,10 @@ type UpdateUserInfo struct {
 	Username string `json:"username" validate:"omitempty,min=3"`
 	Password string `json:"password" validate:"omitempty,min=8"`
 	Name     string `json:"name" validate:"omitempty,min=3"`
+}
+
+type ResetPassword struct {
+	Email string `json:"email" validate:"required,email"`
 }
 
 type ResponseRegister struct {
