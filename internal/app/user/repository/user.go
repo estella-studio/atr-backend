@@ -53,6 +53,7 @@ func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 
 func (r *UserMySQL) ResetPassword(user *entity.User, userParam dto.ResetPassword) error {
 	return r.db.Debug().Debug().
+		Select("email").
 		First(user, userParam).
 		Error
 }
