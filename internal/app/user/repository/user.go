@@ -59,7 +59,6 @@ func (r *UserMySQL) ResetPassword(user *entity.User, userParam dto.ResetPassword
 
 func (r *UserMySQL) GetUsername(user *entity.User, userParam dto.Login) error {
 	return r.db.Debug().
-		Select("username").
 		First(&user, userParam).
 		Error
 }
