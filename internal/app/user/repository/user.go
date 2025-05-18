@@ -11,6 +11,7 @@ type UserMySQLItf interface {
 	Login(user *entity.User) error
 	GetUserInfo(user *entity.User) error
 	UpdateUserInfo(user *entity.User) error
+	ResetPassword(user *entity.User, userParam dto.ResetPassword) error
 	GetUsername(user *entity.User, userParam dto.Login) error
 	SoftDelete(user *entity.User) error
 }
@@ -47,6 +48,12 @@ func (r *UserMySQL) GetUserInfo(user *entity.User) error {
 func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 	return r.db.Debug().
 		Updates(user).
+		Error
+}
+
+func (r *UserMySQL) ResetPassword(user *entity.User, userParam dto.ResetPassword) error {
+	return r.db.Debug().Debug().
+		First(user, userParam).
 		Error
 }
 
