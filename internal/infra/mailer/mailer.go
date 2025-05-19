@@ -75,15 +75,15 @@ func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
 	payload := &PasswordResetJSON{}
 
 	payload.From.Email = m.Config.SMTPFrom
-	payload.From.Name = "Estella Studio"
+	payload.From.Name = m.Config.EmailFrom
 	payload.To = []To{{Email: to}}
-	payload.TemplateUUID, _ = uuid.Parse("736645ed-1c8a-48d3-8e7a-388c32fd182e")
+	payload.TemplateUUID, _ = uuid.Parse(m.Config.MailtrapTemplate)
 	payload.TemplateVariables.UUID = id
-	payload.TemplateVariables.CompanyInfoName = "Estella Studio"
-	payload.TemplateVariables.CompanyInfoAddress = "Malang"
-	payload.TemplateVariables.CompanyInfoCity = "Malang"
-	payload.TemplateVariables.CompanyInfoZipCode = "65144"
-	payload.TemplateVariables.CompanyInfoCountry = "Indonesia"
+	payload.TemplateVariables.CompanyInfoName = m.Config.MailtrapCompanyInfoName
+	payload.TemplateVariables.CompanyInfoAddress = m.Config.MailtrapCompanyInfoAddress
+	payload.TemplateVariables.CompanyInfoCity = m.Config.MailtrapCompanyInfoCity
+	payload.TemplateVariables.CompanyInfoZipCode = m.Config.MailtrapCompanyInfoZipCode
+	payload.TemplateVariables.CompanyInfoCountry = m.Config.MailtrapCompanyInfoCountry
 
 	jsonBody, err := json.Marshal(payload)
 	if err != nil {
