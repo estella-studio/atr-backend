@@ -14,9 +14,8 @@ type JWTItf interface {
 }
 
 type JWT struct {
-	secretKey      string
-	expiredTime    uint
-	GoogleClientID string
+	secretKey   string
+	expiredTime uint
 }
 
 type Claims struct {
@@ -25,12 +24,9 @@ type Claims struct {
 }
 
 func NewJWT(env *env.Env) *JWT {
-	secretKey := env.JWTSecretKey
-	expiredTime := env.JWTExpiredDays
-
 	return &JWT{
-		secretKey:   secretKey,
-		expiredTime: expiredTime,
+		secretKey:   env.JWTSecretKey,
+		expiredTime: env.JWTExpiredDays,
 	}
 }
 

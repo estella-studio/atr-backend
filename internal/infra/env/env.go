@@ -16,6 +16,11 @@ type Env struct {
 	DBPort                  uint   `env:"DB_PORT"`
 	JWTSecretKey            string `env:"JWT_SECRET_KEY"`
 	JWTExpiredDays          uint   `env:"JWT_EXPIRED_DAYS"`
+	SMTPServer              string `env:"SMTP_SERVER"`
+	SMTPPort                int    `env:"SMTP_PORT"`
+	SMTPUsername            string `env:"SMTP_USERNAME"`
+	SMTPPassword            string `env:"SMTP_PASSWORD"`
+	SMTPFrom                string `env:"SMTP_FROM"`
 }
 
 func New() (*Env, error) {
