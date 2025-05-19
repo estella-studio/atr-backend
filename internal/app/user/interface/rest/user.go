@@ -1,11 +1,13 @@
 package rest
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/estella-studio/leon-backend/internal/app/user/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
+	"github.com/estella-studio/leon-backend/internal/infra/mailer"
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -16,16 +18,19 @@ type UserHandler struct {
 	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
 	UserUseCase usecase.UserUseCaseItf
+	Mailer      *mailer.Mailer
 }
 
 func NewUserHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
 	middleware middleware.MiddlewareItf, userUseCase usecase.UserUseCaseItf,
+	mailer *mailer.Mailer,
 ) {
 	userHandler := UserHandler{
 		Validator:   validator,
 		Middleware:  middleware,
 		UserUseCase: userUseCase,
+		Mailer:      mailer,
 	}
 
 	routerGroup = routerGroup.Group("/users")
@@ -60,7 +65,7 @@ func (u *UserHandler) Register(ctx *fiber.Ctx) error {
 	res, err := u.UserUseCase.Register(register)
 	if err != nil {
 		return fiber.NewError(
-			http.StatusUnauthorized,
+			http.StatusConflict,
 			"please use another email / username",
 		)
 	}
@@ -202,9 +207,13 @@ func (u *UserHandler) ResetPassword(ctx *fiber.Ctx) error {
 		)
 	}
 
-	_ = u.UserUseCase.ResetPassword(user)
-
-	// TODO: Handle reset password
+	err = u.UserUseCase.ResetPassword(user)
+	if err == nil {
+		err = u.Mailer.PasswordReset(user.Email, uuid.New())
+		if err != nil {
+			log.Println(err)
+		}
+	}
 
 	return ctx.Status(http.StatusOK).Context().Err()
 }

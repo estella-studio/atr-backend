@@ -15,6 +15,7 @@ import (
 	userusecase "github.com/estella-studio/leon-backend/internal/app/user/usecase"
 	"github.com/estella-studio/leon-backend/internal/infra/env"
 	"github.com/estella-studio/leon-backend/internal/infra/jwt"
+	"github.com/estella-studio/leon-backend/internal/infra/mailer"
 	"github.com/estella-studio/leon-backend/internal/infra/mysql"
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
@@ -66,6 +67,8 @@ func Start() (*fiber.App, uint, error) {
 
 	jwt := jwt.NewJWT(config)
 
+	mailer := mailer.NewMailer(config)
+
 	middleware := middleware.NewMiddleware(*jwt)
 
 	app.Use(
@@ -95,7 +98,7 @@ func Start() (*fiber.App, uint, error) {
 	pinghandler.NewPingHandler(v1)
 	userRepository := userrepository.NewUserMySQL(database)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
-	userhandler.NewUserHandler(v1, val, middleware, userUseCase)
+	userhandler.NewUserHandler(v1, val, middleware, userUseCase, mailer)
 	dataRepository := datarepository.NewDataMySQL(database)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
 	datahandler.NewDataHandler(v1, val, middleware, dataUseCase)
