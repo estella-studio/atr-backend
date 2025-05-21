@@ -69,7 +69,7 @@ func (m *Mailer) NewMail(to string, subject string, body string) error {
 }
 
 func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
-	url := "https://send.api.mailtrap.io/api/send"
+	url := m.Config.MailtrapURL
 	method := "POST"
 
 	payload := &PasswordResetJSON{}
@@ -101,7 +101,7 @@ func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
 
 	req.Header.Add(
 		"Authorization",
-		fmt.Sprintf("Bearer %s", "c8b4eae0c41260d8a14f5cee8bda744e"),
+		fmt.Sprintf("Bearer %s", m.Config.MailtrapToken),
 	)
 	req.Header.Add("Content-Type", "application/json")
 

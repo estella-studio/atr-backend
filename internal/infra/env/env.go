@@ -8,6 +8,7 @@ import (
 type Env struct {
 	LimiterMax                 int    `env:"LIMITER_MAX"`
 	LimiterExpirationMinute    uint   `env:"LIMITER_EXPIRATION_MINUTE"`
+	PasswordChangeExpiryMinute int    `env:"PASSWORD_CHANGE_EXPIRY_MINUTE"`
 	AppPort                    uint   `env:"APP_PORT"`
 	DBName                     string `env:"DB_NAME"`
 	DBUsername                 string `env:"DB_USERNAME"`
@@ -22,6 +23,7 @@ type Env struct {
 	SMTPUsername               string `env:"SMTP_USERNAME"`
 	SMTPPassword               string `env:"SMTP_PASSWORD"`
 	SMTPFrom                   string `env:"SMTP_FROM"`
+	MailtrapToken              string `env:"MAILTRAP_TOKEN"`
 	MailtrapURL                string `env:"MAILTRAP_URL"`
 	MailtrapTemplate           string `env:"MAILTRAP_TEMPLATE"`
 	MailtrapCompanyInfoName    string `env:"MAILTRAP_COMPANY_INFO_NAME"`

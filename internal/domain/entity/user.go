@@ -9,15 +9,23 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID      `json:"id" gorm:"type:char(36);primaryKey"`
-	Email     string         `json:"email" gorm:"type:varchar(128);not null;unique"`
-	Username  string         `json:"username" gorm:"type:varchar(64);not null;unique"`
-	Password  string         `json:"password" gorm:"type:text;not null"`
-	Name      string         `json:"name" gorm:"type:varchar(128)"`
-	CreatedAt time.Time      `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
-	UpdatedAt time.Time      `json:"updated_at" gorm:"type:timestamp;autoUpdateTime"`
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-	Data      []Data
+	ID            uuid.UUID      `json:"id" gorm:"type:char(36);primaryKey"`
+	Email         string         `json:"email" gorm:"type:varchar(128);not null;unique"`
+	Username      string         `json:"username" gorm:"type:varchar(64);not null;unique"`
+	Password      string         `json:"password" gorm:"type:text;not null"`
+	Name          string         `json:"name" gorm:"type:varchar(128)"`
+	CreatedAt     time.Time      `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
+	UpdatedAt     time.Time      `json:"updated_at" gorm:"type:timestamp;autoUpdateTime"`
+	DeletedAt     gorm.DeletedAt `gorm:"index"`
+	Data          []Data
+	PasswordReset []PasswordChange
+}
+
+type PasswordChange struct {
+	ID        uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	UserID    uuid.UUID `json:"user_id" gorm:"type:char(36)"`
+	CreatedAt time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
+	Success   bool      `json:"valid" gorm:"type:boolean"`
 }
 
 func (u *User) ParseToDTOResponseRegister() dto.ResponseRegister {

@@ -11,8 +11,15 @@ type UserMySQLItf interface {
 	Login(user *entity.User) error
 	GetUserInfo(user *entity.User) error
 	UpdateUserInfo(user *entity.User) error
-	ResetPassword(user *entity.User, userParam dto.ResetPassword) error
+	GetEmail(user *entity.User, userParam dto.ResetPassword) error
+	ChangePassword(user *entity.User) error
+	GetUserID(user *entity.User, userParam dto.ResetPassword) error
 	GetUsername(user *entity.User, userParam dto.Login) error
+	GetPasswordChangeID(passwordChange *entity.PasswordChange, userParam dto.ResetPassword) error
+	CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
+	UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
+	GetPasswordChangeValidity(passwordChange *entity.PasswordChange) error
+	GetPasswordChangeEntry(passwordChange *entity.PasswordChange, userParam dto.ResetPasswordWithID) error
 	SoftDelete(user *entity.User) error
 }
 
@@ -51,9 +58,23 @@ func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 		Error
 }
 
-func (r *UserMySQL) ResetPassword(user *entity.User, userParam dto.ResetPassword) error {
-	return r.db.Debug().Debug().
+func (r *UserMySQL) GetEmail(user *entity.User, userParam dto.ResetPassword) error {
+	return r.db.Debug().
 		Select("email").
+		First(user, userParam).
+		Error
+}
+
+func (r *UserMySQL) ChangePassword(user *entity.User) error {
+	return r.db.Debug().
+		Model(&user).
+		Update("password", user.Password).
+		Error
+}
+
+func (r *UserMySQL) GetUserID(user *entity.User, userParam dto.ResetPassword) error {
+	return r.db.Debug().
+		Select("id").
 		First(user, userParam).
 		Error
 }
@@ -61,6 +82,40 @@ func (r *UserMySQL) ResetPassword(user *entity.User, userParam dto.ResetPassword
 func (r *UserMySQL) GetUsername(user *entity.User, userParam dto.Login) error {
 	return r.db.Debug().
 		First(&user, userParam).
+		Error
+}
+
+func (r *UserMySQL) GetPasswordChangeID(passwordChange *entity.PasswordChange, userParam dto.ResetPassword) error {
+	return r.db.Debug().
+		Select("id").
+		First(passwordChange, userParam).
+		Error
+}
+
+func (r *UserMySQL) CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+	return r.db.Debug().
+		Create(passwordChange).
+		Error
+}
+
+func (r *UserMySQL) UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+	return r.db.Debug().
+		Model(passwordChange).
+		Update("success", passwordChange.Success).
+		Error
+}
+
+func (r *UserMySQL) GetPasswordChangeValidity(passwordChange *entity.PasswordChange) error {
+	return r.db.Debug().
+		Select("id", "created_at", "success").
+		First(passwordChange).
+		Error
+}
+
+func (r *UserMySQL) GetPasswordChangeEntry(passwordChange *entity.PasswordChange, userParam dto.ResetPasswordWithID) error {
+	return r.db.Debug().
+		Select("user_id").
+		First(passwordChange).
 		Error
 }
 

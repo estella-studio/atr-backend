@@ -98,7 +98,7 @@ func Start() (*fiber.App, uint, error) {
 	pinghandler.NewPingHandler(v1)
 	userRepository := userrepository.NewUserMySQL(database)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
-	userhandler.NewUserHandler(v1, val, middleware, userUseCase, mailer)
+	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
 	dataRepository := datarepository.NewDataMySQL(database)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
 	datahandler.NewDataHandler(v1, val, middleware, dataUseCase)

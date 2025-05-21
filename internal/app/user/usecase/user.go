@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"log"
+	"time"
+
 	"github.com/estella-studio/leon-backend/internal/app/user/repository"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/domain/entity"
@@ -15,6 +18,12 @@ type UserUseCaseItf interface {
 	GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error)
 	UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error)
 	ResetPassword(resetPassword dto.ResetPassword) error
+	ChangePassword(changePassword dto.ChangePassword, userID uuid.UUID) error
+	CreatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
+	UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
+	GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error)
+	GetPasswordChangeEntry(id uuid.UUID) (uuid.UUID, error)
+	GetUserID(getUserID dto.ResetPassword) (uuid.UUID, error)
 	SoftDelete(userID uuid.UUID) error
 }
 
@@ -120,9 +129,85 @@ func (u *UserUseCase) ResetPassword(resetPassword dto.ResetPassword) error {
 		Email: resetPassword.Email,
 	}
 
-	err := u.userRepo.ResetPassword(&user, dto.ResetPassword{Email: resetPassword.Email})
+	err := u.userRepo.GetEmail(&user, dto.ResetPassword{Email: resetPassword.Email})
 
 	return err
+}
+
+func (u *UserUseCase) ChangePassword(changePassword dto.ChangePassword, userID uuid.UUID) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(changePassword.Password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		return err
+	}
+
+	user := entity.User{
+		ID:       userID,
+		Password: string(hashedPassword),
+	}
+
+	err = u.userRepo.ChangePassword(&user)
+
+	return err
+}
+
+func (u *UserUseCase) CreatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error {
+	passwordChange := entity.PasswordChange{
+		ID:      changeID,
+		UserID:  userID,
+		Success: false,
+	}
+
+	err := u.userRepo.CreatePasswordChangeEntry(&passwordChange)
+
+	return err
+}
+
+func (u *UserUseCase) UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error {
+	passwordChange := entity.PasswordChange{
+		ID:      changeID,
+		UserID:  userID,
+		Success: true,
+	}
+
+	err := u.userRepo.UpdatePasswordChangeEntry(&passwordChange)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return err
+}
+
+func (u *UserUseCase) GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error) {
+	passwordChange := entity.PasswordChange{
+		ID: id,
+	}
+
+	err := u.userRepo.GetPasswordChangeValidity(&passwordChange)
+
+	return passwordChange.Success, passwordChange.CreatedAt, err
+}
+
+func (u *UserUseCase) GetPasswordChangeEntry(id uuid.UUID) (uuid.UUID, error) {
+	passwordChange := entity.PasswordChange{
+		ID: id,
+	}
+
+	err := u.userRepo.GetPasswordChangeEntry(&passwordChange, dto.ResetPasswordWithID{ID: id})
+
+	return passwordChange.UserID, err
+}
+
+func (u *UserUseCase) GetUserID(getUserID dto.ResetPassword) (uuid.UUID, error) {
+	user := entity.User{
+		Email: getUserID.Email,
+	}
+
+	err := u.userRepo.GetUserID(&user, getUserID)
+
+	return user.ID, err
 }
 
 func (u *UserUseCase) SoftDelete(userID uuid.UUID) error {
