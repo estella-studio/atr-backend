@@ -11,7 +11,7 @@ type Register struct {
 	Email    string    `json:"email" validate:"required,email"`
 	Username string    `json:"username" validate:"required,min=4,max=20"`
 	Password string    `json:"password" validate:"required,min=4"`
-	Name     string    `json:"name" validate:"omitempty,min=3,max=128"`
+	Name     string    `json:"name" validate:"omitempty,min=3,max=14"`
 }
 
 type Login struct {
@@ -28,6 +28,14 @@ type UpdateUserInfo struct {
 
 type ResetPassword struct {
 	Email string `json:"email" validate:"required,email"`
+}
+
+type ResetPasswordWithID struct {
+	ID uuid.UUID `json:"id" validate:"required,min=36,max=36"`
+}
+
+type ChangePassword struct {
+	Password string `json:"password" validate:"required,min=4"`
 }
 
 type ResponseRegister struct {
