@@ -15,6 +15,7 @@ import (
 
 type MailerItf interface {
 	NewMail(to string, subject string, body string) error
+	PasswordReset(to string, id uuid.UUID) error
 }
 
 type Mailer struct {
@@ -42,7 +43,7 @@ type PasswordResetJSON struct {
 	} `json:"template_variables"`
 }
 
-func NewMailer(env *env.Env) *Mailer {
+func NewMailer(env *env.Env) MailerItf {
 	return &Mailer{
 		Config: env,
 	}

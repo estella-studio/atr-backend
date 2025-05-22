@@ -21,13 +21,13 @@ type UserHandler struct {
 	Middleware  middleware.MiddlewareItf
 	UserUseCase usecase.UserUseCaseItf
 	Config      *env.Env
-	Mailer      *mailer.Mailer
+	Mailer      mailer.MailerItf
 }
 
 func NewUserHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
 	middleware middleware.MiddlewareItf, userUseCase usecase.UserUseCaseItf,
-	config *env.Env, mailer *mailer.Mailer,
+	config *env.Env, mailer mailer.MailerItf,
 ) {
 	userHandler := UserHandler{
 		Config:      config,

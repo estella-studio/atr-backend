@@ -29,7 +29,7 @@ type UserMySQL struct {
 
 func NewUserMySQL(db *gorm.DB) UserMySQLItf {
 	return &UserMySQL{
-		db,
+		db: db,
 	}
 }
 
