@@ -270,7 +270,7 @@ func (u *UserHandler) ResetPasswordWithID(ctx *fiber.Ctx) error {
 	userID, err := u.UserUseCase.GetPasswordChangeEntry(id)
 	if err != nil ||
 		alreadyChanged ||
-		time.Since(createdAt) > time.Duration(u.Config.PasswordChangeExpiryMinute*int(time.Minute)) {
+		time.Since(createdAt) > time.Duration(u.Config.PasswordChangeExpiryMinutes*int(time.Minute)) {
 		return fiber.NewError(
 			http.StatusBadRequest,
 			"invalid link",
