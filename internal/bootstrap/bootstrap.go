@@ -83,7 +83,7 @@ func Start() (*fiber.App, uint, error) {
 		limiter.New(
 			limiter.Config{
 				Max:               config.LimiterMax,
-				Expiration:        time.Duration(config.LimiterExpirationMinute) * 60,
+				Expiration:        time.Duration(config.LimiterExpirationMinutes) * 60,
 				LimiterMiddleware: limiter.SlidingWindow{},
 			}),
 		logger.New(

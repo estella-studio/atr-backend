@@ -19,7 +19,7 @@ type DataMySQL struct {
 
 func NewDataMySQL(db *gorm.DB) DataMySQLItf {
 	return &DataMySQL{
-		db,
+		db: db,
 	}
 }
 

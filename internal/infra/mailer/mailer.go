@@ -15,6 +15,7 @@ import (
 
 type MailerItf interface {
 	NewMail(to string, subject string, body string) error
+	PasswordReset(to string, id uuid.UUID, code uint) error
 }
 
 type Mailer struct {
@@ -34,6 +35,7 @@ type PasswordResetJSON struct {
 	TemplateUUID      uuid.UUID `json:"template_uuid"`
 	TemplateVariables struct {
 		UUID               uuid.UUID `json:"uuid"`
+		Code               uint      `json:"code"`
 		CompanyInfoName    string    `json:"company_info_name"`
 		CompanyInfoAddress string    `json:"company_info_address"`
 		CompanyInfoCity    string    `json:"company_info_city"`
@@ -42,7 +44,7 @@ type PasswordResetJSON struct {
 	} `json:"template_variables"`
 }
 
-func NewMailer(env *env.Env) *Mailer {
+func NewMailer(env *env.Env) MailerItf {
 	return &Mailer{
 		Config: env,
 	}
@@ -68,7 +70,7 @@ func (m *Mailer) NewMail(to string, subject string, body string) error {
 	return err
 }
 
-func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
+func (m *Mailer) PasswordReset(to string, id uuid.UUID, code uint) error {
 	url := m.Config.MailtrapURL
 	method := "POST"
 
@@ -79,6 +81,7 @@ func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
 	payload.To = []To{{Email: to}}
 	payload.TemplateUUID, _ = uuid.Parse(m.Config.MailtrapTemplate)
 	payload.TemplateVariables.UUID = id
+	payload.TemplateVariables.Code = code
 	payload.TemplateVariables.CompanyInfoName = m.Config.MailtrapCompanyInfoName
 	payload.TemplateVariables.CompanyInfoAddress = m.Config.MailtrapCompanyInfoAddress
 	payload.TemplateVariables.CompanyInfoCity = m.Config.MailtrapCompanyInfoCity
@@ -122,5 +125,5 @@ func (m *Mailer) PasswordReset(to string, id uuid.UUID) error {
 
 	log.Println(string(body))
 
-	return nil
+	return err
 }
