@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"log"
 	"time"
 
 	"github.com/estella-studio/leon-backend/internal/app/user/repository"
@@ -20,7 +19,11 @@ type UserUseCaseItf interface {
 	ResetPassword(resetPassword dto.ResetPassword) error
 	ChangePassword(changePassword dto.ChangePassword, userID uuid.UUID) error
 	CreatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
+	CreatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
 	UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
+	UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
+	GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error)
+	GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error)
 	GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error)
 	GetPasswordChangeEntry(id uuid.UUID) (uuid.UUID, error)
 	GetUserID(getUserID dto.ResetPassword) (uuid.UUID, error)
@@ -165,6 +168,19 @@ func (u *UserUseCase) CreatePasswordChangeEntry(changeID uuid.UUID, userID uuid.
 	return err
 }
 
+func (u *UserUseCase) CreatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error {
+	passwordReset := entity.PasswordResetCode{
+		ID:               uuid.New(),
+		PasswordChangeID: changeID,
+		UserID:           userID,
+		Code:             code,
+	}
+
+	err := u.userRepo.CreatePasswordResetCode(&passwordReset)
+
+	return err
+}
+
 func (u *UserUseCase) UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error {
 	passwordChange := entity.PasswordChange{
 		ID:      changeID,
@@ -173,11 +189,43 @@ func (u *UserUseCase) UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.
 	}
 
 	err := u.userRepo.UpdatePasswordChangeEntry(&passwordChange)
-	if err != nil {
-		log.Println(err)
-	}
 
 	return err
+}
+
+func (u *UserUseCase) UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error {
+	passwordResetCode := entity.PasswordResetCode{
+		PasswordChangeID: changeID,
+		UserID:           userID,
+		Code:             code,
+	}
+
+	err := u.userRepo.UpdatePasswordResetCode(&passwordResetCode)
+
+	return err
+}
+
+func (u *UserUseCase) GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error) {
+	passwordResetCode := entity.PasswordResetCode{
+		UserID: userID,
+	}
+
+	err := u.userRepo.GetPasswordResetCode(
+		&passwordResetCode,
+		dto.ResetPasswordWithCode{Code: code},
+	)
+
+	return passwordResetCode.PasswordChangeID, err
+}
+
+func (u *UserUseCase) GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error) {
+	passwordResetCode := entity.PasswordResetCode{
+		UserID: userID,
+	}
+
+	err := u.userRepo.GetPasswordResetCodeValidity(&passwordResetCode)
+
+	return passwordResetCode.CreatedAt, err
 }
 
 func (u *UserUseCase) GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error) {

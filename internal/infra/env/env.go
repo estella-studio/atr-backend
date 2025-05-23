@@ -9,7 +9,8 @@ type Env struct {
 	LimiterMax                     int    `env:"LIMITER_MAX"`
 	LimiterExpirationMinutes       int    `env:"LIMITER_EXPIRATION_MINUTES"`
 	PasswordChangeExpiryMinutes    int    `env:"PASSWORD_CHANGE_EXPIRY_MINUTES"`
-	PasswordChangeCodeRetrySeconds int    `env:"PASSWORD_CHANGE_RETRY_SECONDS"`
+	PasswordChangeCodeRetrySeconds int    `env:"PASSWORD_CHANGE_CODE_RETRY_SECONDS"`
+	PasswordChangeCodeDigitcount   uint   `env:"PASSWORD_CHANGE_CODE_DIGIT_COUNT"`
 	AppPort                        uint   `env:"APP_PORT"`
 	DBName                         string `env:"DB_NAME"`
 	DBUsername                     string `env:"DB_USERNAME"`

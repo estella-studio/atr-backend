@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log"
+
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/domain/entity"
 	"gorm.io/gorm"
@@ -9,17 +11,21 @@ import (
 type UserMySQLItf interface {
 	Register(user *entity.User) error
 	Login(user *entity.User) error
-	GetUserInfo(user *entity.User) error
-	UpdateUserInfo(user *entity.User) error
-	GetEmail(user *entity.User, userParam dto.ResetPassword) error
 	ChangePassword(user *entity.User) error
+	GetEmail(user *entity.User, userParam dto.ResetPassword) error
+	GetUserInfo(user *entity.User) error
 	GetUserID(user *entity.User, userParam dto.ResetPassword) error
 	GetUsername(user *entity.User, userParam dto.Login) error
 	GetPasswordChangeID(passwordChange *entity.PasswordChange, userParam dto.ResetPassword) error
-	CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
-	UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
+	GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode, userParam dto.ResetPasswordWithCode) error
 	GetPasswordChangeValidity(passwordChange *entity.PasswordChange) error
+	GetPasswordResetCodeValidity(passwordChange *entity.PasswordResetCode) error
 	GetPasswordChangeEntry(passwordChange *entity.PasswordChange, userParam dto.ResetPasswordWithID) error
+	CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
+	CreatePasswordResetCode(passwordResetCode *entity.PasswordResetCode) error
+	UpdatePasswordResetCode(passwordResetCode *entity.PasswordResetCode) error
+	UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
+	UpdateUserInfo(user *entity.User) error
 	SoftDelete(user *entity.User) error
 }
 
@@ -45,16 +51,10 @@ func (r *UserMySQL) Login(user *entity.User) error {
 		Error
 }
 
-func (r *UserMySQL) GetUserInfo(user *entity.User) error {
+func (r *UserMySQL) ChangePassword(user *entity.User) error {
 	return r.db.Debug().
-		Select("id", "email", "username", "name", "created_at", "updated_at").
-		First(user).
-		Error
-}
-
-func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
-	return r.db.Debug().
-		Updates(user).
+		Model(&user).
+		Update("password", user.Password).
 		Error
 }
 
@@ -65,10 +65,10 @@ func (r *UserMySQL) GetEmail(user *entity.User, userParam dto.ResetPassword) err
 		Error
 }
 
-func (r *UserMySQL) ChangePassword(user *entity.User) error {
+func (r *UserMySQL) GetUserInfo(user *entity.User) error {
 	return r.db.Debug().
-		Model(&user).
-		Update("password", user.Password).
+		Select("id", "email", "username", "name", "created_at", "updated_at").
+		First(user).
 		Error
 }
 
@@ -81,7 +81,7 @@ func (r *UserMySQL) GetUserID(user *entity.User, userParam dto.ResetPassword) er
 
 func (r *UserMySQL) GetUsername(user *entity.User, userParam dto.Login) error {
 	return r.db.Debug().
-		First(&user, userParam).
+		First(user, userParam).
 		Error
 }
 
@@ -92,16 +92,19 @@ func (r *UserMySQL) GetPasswordChangeID(passwordChange *entity.PasswordChange, u
 		Error
 }
 
-func (r *UserMySQL) CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+func (r *UserMySQL) GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode, userParam dto.ResetPasswordWithCode) error {
 	return r.db.Debug().
-		Create(passwordChange).
+		Select("password_change_id", "code").
+		First(passwordResetcode, userParam).
 		Error
 }
 
-func (r *UserMySQL) UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+func (r *UserMySQL) GetPasswordResetCodeValidity(passwordChange *entity.PasswordResetCode) error {
 	return r.db.Debug().
-		Model(passwordChange).
-		Update("success", passwordChange.Success).
+		Order("created_at desc").
+		Find(&passwordChange).
+		Select("created_at").
+		Where("user_id = ?", passwordChange.UserID).
 		Error
 }
 
@@ -119,8 +122,43 @@ func (r *UserMySQL) GetPasswordChangeEntry(passwordChange *entity.PasswordChange
 		Error
 }
 
+func (r *UserMySQL) CreatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+	return r.db.Debug().
+		Create(passwordChange).
+		Error
+}
+
+func (r *UserMySQL) CreatePasswordResetCode(passwordResetCode *entity.PasswordResetCode) error {
+	return r.db.Debug().
+		Create(passwordResetCode).
+		Error
+}
+
+func (r *UserMySQL) UpdatePasswordResetCode(passwordResetCode *entity.PasswordResetCode) error {
+	return r.db.Debug().
+		Model(&passwordResetCode).
+		Where("password_change_id = ?", passwordResetCode.PasswordChangeID).
+		Delete(passwordResetCode).
+		Error
+}
+
+func (r *UserMySQL) UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
+	log.Println(passwordChange)
+	return r.db.Debug().
+		Model(&passwordChange).
+		Where("id = ?", passwordChange.ID).
+		Update("success", passwordChange.Success).
+		Error
+}
+
+func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
+	return r.db.Debug().
+		Updates(user).
+		Error
+}
+
 func (r *UserMySQL) SoftDelete(user *entity.User) error {
 	return r.db.Debug().
-		Delete(&user).
+		Delete(user).
 		Error
 }

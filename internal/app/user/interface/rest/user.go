@@ -2,7 +2,9 @@ package rest
 
 import (
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +47,7 @@ func NewUserHandler(
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
 	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
 	routerGroup.Post("/resetpassword", userHandler.ResetPasswordWithID)
+	routerGroup.Post("/resetpasswordwithcode", userHandler.ResetPasswordWithCode)
 	routerGroup.Post("/changepassword", middleware.Authentication, userHandler.ChangePassword)
 	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
 }
@@ -213,19 +216,51 @@ func (u *UserHandler) ResetPassword(ctx *fiber.Ctx) error {
 		)
 	}
 
-	userID, err := u.UserUseCase.GetUserID(user)
-	if err != nil {
-		log.Println(err)
-	}
+	go func() {
+		userID, err := u.UserUseCase.GetUserID(user)
+		if err != nil {
+			log.Println(err)
+		}
 
-	changeID := uuid.New()
+		lastRequest, err := u.UserUseCase.GetPasswordResetCodeValidity(userID)
+		if err != nil {
+			log.Println(err)
+		}
 
-	go u.UserUseCase.CreatePasswordChangeEntry(changeID, userID)
+		timeSecond := time.Since(lastRequest)
 
-	err = u.UserUseCase.ResetPassword(user)
-	if err == nil {
-		go u.Mailer.PasswordReset(user.Email, changeID)
-	}
+		if timeSecond < time.Duration(u.Config.PasswordChangeCodeRetrySeconds*int(time.Second)) {
+			log.Printf("time since last: %d\n", timeSecond)
+			return
+		}
+
+		changeID := uuid.New()
+		var codeString string
+
+		for i := uint(0); i < u.Config.PasswordChangeCodeDigitcount; i++ {
+			codeString += (string)(rand.Intn(10) + 48)
+		}
+
+		code, _ := strconv.Atoi(codeString)
+
+		err = u.UserUseCase.CreatePasswordChangeEntry(changeID, userID)
+		if err != nil {
+			log.Println(err)
+		}
+
+		err = u.UserUseCase.CreatePasswordResetCode(changeID, userID, uint(code))
+		if err != nil {
+			log.Println(err)
+		}
+
+		err = u.UserUseCase.ResetPassword(user)
+		if err == nil {
+			err := u.Mailer.PasswordReset(user.Email, changeID, uint(code))
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
 
 	return ctx.Status(http.StatusOK).Context().Err()
 }
@@ -285,7 +320,72 @@ func (u *UserHandler) ResetPasswordWithID(ctx *fiber.Ctx) error {
 		)
 	}
 
-	go u.UserUseCase.UpdatePasswordChangeEntry(id, userID)
+	go func() {
+		err := u.UserUseCase.UpdatePasswordChangeEntry(id, userID)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "password changed",
+	})
+}
+
+func (u *UserHandler) ResetPasswordWithCode(ctx *fiber.Ctx) error {
+	var user dto.ResetPasswordWithCode
+
+	err := ctx.BodyParser(&user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	userID, err := u.UserUseCase.GetUserID(dto.ResetPassword{Email: user.Email})
+	if err != nil {
+		return fiber.NewError(
+			http.StatusNoContent,
+		)
+	}
+
+	user.PasswordChangeId, err = u.UserUseCase.GetPasswordResetCode(userID, user.Code)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"invalid code",
+		)
+	}
+
+	err = u.UserUseCase.ChangePassword(dto.ChangePassword{Password: user.Password}, userID)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to change passsword",
+		)
+	}
+
+	go func() {
+		log.Println(user.PasswordChangeId)
+		err := u.UserUseCase.UpdatePasswordResetCode(user.PasswordChangeId, userID, user.Code)
+		if err != nil {
+			log.Println(err)
+		}
+
+		err = u.UserUseCase.UpdatePasswordChangeEntry(user.PasswordChangeId, userID)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "password changed",
@@ -321,7 +421,12 @@ func (u *UserHandler) ChangePassword(ctx *fiber.Ctx) error {
 
 	changeID := uuid.New()
 
-	go u.UserUseCase.CreatePasswordChangeEntry(changeID, userID)
+	go func() {
+		err := u.UserUseCase.CreatePasswordChangeEntry(changeID, userID)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	err = u.UserUseCase.ChangePassword(user, userID)
 	if err != nil {
@@ -330,7 +435,12 @@ func (u *UserHandler) ChangePassword(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go u.UserUseCase.UpdatePasswordChangeEntry(changeID, userID)
+	go func() {
+		err := u.UserUseCase.UpdatePasswordChangeEntry(changeID, userID)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "password changed",
@@ -354,7 +464,5 @@ func (u *UserHandler) SoftDelete(ctx *fiber.Ctx) error {
 		)
 	}
 
-	return ctx.Status(http.StatusNoContent).JSON(fiber.Map{
-		"message": "user deleted",
-	})
+	return ctx.Status(http.StatusNoContent).Context().Err()
 }
