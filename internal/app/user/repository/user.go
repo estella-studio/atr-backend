@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"log"
-
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/domain/entity"
 	"gorm.io/gorm"
@@ -143,7 +141,6 @@ func (r *UserMySQL) UpdatePasswordResetCode(passwordResetCode *entity.PasswordRe
 }
 
 func (r *UserMySQL) UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error {
-	log.Println(passwordChange)
 	return r.db.Debug().
 		Model(&passwordChange).
 		Where("id = ?", passwordChange.ID).
