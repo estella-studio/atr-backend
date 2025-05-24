@@ -11,7 +11,7 @@ type Register struct {
 	Email    string    `json:"email" validate:"required,email"`
 	Username string    `json:"username" validate:"required,min=4,max=20"`
 	Password string    `json:"password" validate:"required,min=4"`
-	Name     string    `json:"name" validate:"omitempty,min=3,max=14"`
+	Name     string    `json:"name" validate:"omitempty,min=3,max=28"`
 }
 
 type Login struct {
@@ -23,7 +23,7 @@ type UpdateUserInfo struct {
 	Email    string `json:"email" validate:"omitempty,email"`
 	Username string `json:"username" validate:"omitempty,min=4,max=20"`
 	Password string `json:"password" validate:"omitempty,min=4"`
-	Name     string `json:"name" validate:"omitempty,min=3,max=14"`
+	Name     string `json:"name" validate:"omitempty,min=3,max=28"`
 }
 
 type ResetPassword struct {
