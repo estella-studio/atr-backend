@@ -21,7 +21,7 @@ type UserMySQLItf interface {
 	GetUserID(user *entity.User, userParam dto.ResetPassword) error
 	GetUsername(user *entity.User, userParam dto.Login) error
 	GetPasswordChangeID(passwordChange *entity.PasswordChange, userParam dto.ResetPassword) error
-	GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode, userParam dto.ResetPasswordWithCode) error
+	GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode) error
 	GetPasswordChangeValidity(passwordChange *entity.PasswordChange) error
 	GetPasswordResetCodeValidity(passwordChange *entity.PasswordResetCode) error
 	GetPasswordChangeEntry(passwordChange *entity.PasswordChange, userParam dto.ResetPasswordWithID) error
@@ -140,10 +140,12 @@ func (r *UserMySQL) GetPasswordChangeID(passwordChange *entity.PasswordChange, u
 		Error
 }
 
-func (r *UserMySQL) GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode, userParam dto.ResetPasswordWithCode) error {
+func (r *UserMySQL) GetPasswordResetCode(passwordResetcode *entity.PasswordResetCode) error {
 	return r.db.Debug().
+		Order("created_at desc").
 		Select("password_change_id, code").
-		First(passwordResetcode, userParam).
+		Where("user_id = ?", passwordResetcode.UserID).
+		First(passwordResetcode).
 		Error
 }
 

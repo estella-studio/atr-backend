@@ -50,6 +50,7 @@ func NewUserHandler(
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
 	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
 	routerGroup.Post("/resetpassword", userHandler.ResetPasswordWithID)
+	routerGroup.Get("/checkpasswordresetcode", userHandler.CheckPasswordResetCode)
 	routerGroup.Post("/resetpasswordwithcode", userHandler.ResetPasswordWithCode)
 	routerGroup.Post("/changepassword", middleware.Authentication, userHandler.ChangePassword)
 	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
@@ -474,6 +475,49 @@ func (u *UserHandler) ResetPasswordWithID(ctx *fiber.Ctx) error {
 	})
 }
 
+func (u *UserHandler) CheckPasswordResetCode(ctx *fiber.Ctx) error {
+	var checkPasswordResetCode dto.CheckPasswordResetCode
+
+	err := ctx.BodyParser(&checkPasswordResetCode)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(checkPasswordResetCode)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	userID, err := u.UserUseCase.GetUserID(
+		dto.ResetPassword{
+			Email: checkPasswordResetCode.Email,
+		},
+	)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid email",
+		)
+	}
+
+	_, code, err := u.UserUseCase.GetPasswordResetCode(userID, checkPasswordResetCode.Code)
+	if err != nil ||
+		code != checkPasswordResetCode.Code {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid code",
+		)
+	}
+
+	return ctx.Status(http.StatusOK).Context().Err()
+}
+
 func (u *UserHandler) ResetPasswordWithCode(ctx *fiber.Ctx) error {
 	var user dto.ResetPasswordWithCode
 
@@ -500,13 +544,16 @@ func (u *UserHandler) ResetPasswordWithCode(ctx *fiber.Ctx) error {
 		)
 	}
 
-	user.PasswordChangeId, err = u.UserUseCase.GetPasswordResetCode(userID, user.Code)
-	if err != nil {
+	passwordChagneID, code, err := u.UserUseCase.GetPasswordResetCode(userID, user.Code)
+	if err != nil ||
+		code != user.Code {
 		return fiber.NewError(
 			http.StatusUnauthorized,
 			"invalid code",
 		)
 	}
+
+	user.PasswordChangeId = passwordChagneID
 
 	err = u.UserUseCase.ChangePassword(dto.ChangePassword{Password: user.Password}, userID)
 	if err != nil {

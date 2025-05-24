@@ -57,6 +57,11 @@ type ResetPasswordWithID struct {
 	ID uuid.UUID `json:"id" validate:"required,min=36,max=36"`
 }
 
+type CheckPasswordResetCode struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  uint   `json:"code" validate:"required,min=8"`
+}
+
 type ResetPasswordWithCode struct {
 	Email            string    `json:"email" validate:"required,email"`
 	Code             uint      `json:"code" validate:"required"`

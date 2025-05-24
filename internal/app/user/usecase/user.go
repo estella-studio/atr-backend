@@ -27,7 +27,7 @@ type UserUseCaseItf interface {
 	CreatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
 	UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
 	UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
-	GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error)
+	GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, uint, error)
 	GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error)
 	GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error)
 	GetPasswordChangeEntry(id uuid.UUID) (uuid.UUID, error)
@@ -280,17 +280,16 @@ func (u *UserUseCase) UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UU
 	return err
 }
 
-func (u *UserUseCase) GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error) {
+func (u *UserUseCase) GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, uint, error) {
 	passwordResetCode := entity.PasswordResetCode{
 		UserID: userID,
 	}
 
 	err := u.userRepo.GetPasswordResetCode(
 		&passwordResetCode,
-		dto.ResetPasswordWithCode{Code: code},
 	)
 
-	return passwordResetCode.PasswordChangeID, err
+	return passwordResetCode.PasswordChangeID, passwordResetCode.Code, err
 }
 
 func (u *UserUseCase) GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error) {
