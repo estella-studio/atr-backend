@@ -43,6 +43,9 @@ func NewUserHandler(
 
 	routerGroup.Post("/register", userHandler.Register)
 	routerGroup.Post("/login", userHandler.Login)
+	routerGroup.Post("/emailverification", userHandler.NewEmailVerification)
+	routerGroup.Post("/validateemail", userHandler.ValidateEmail)
+	routerGroup.Get("/checkusername", userHandler.CheckUsername)
 	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
 	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
 	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
@@ -68,6 +71,22 @@ func (u *UserHandler) Register(ctx *fiber.Ctx) error {
 		return fiber.NewError(
 			http.StatusBadRequest,
 			"invalid request body",
+		)
+	}
+
+	_, validated, err := u.UserUseCase.GetEmailVerification(
+		&dto.EmailVerification{
+			Email: register.Email,
+		},
+	)
+	if err != nil {
+		log.Println(err)
+	}
+
+	if !validated {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"email not validated",
 		)
 	}
 
@@ -117,6 +136,129 @@ func (u *UserHandler) Login(ctx *fiber.Ctx) error {
 		"token":   token,
 		"payload": res,
 	})
+}
+
+func (u *UserHandler) NewEmailVerification(ctx *fiber.Ctx) error {
+	var emailVerification dto.EmailVerification
+
+	err := ctx.BodyParser(&emailVerification)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(emailVerification)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	go func() {
+		var codeString string
+
+		for i := uint(0); i < u.Config.AccountRegistrationCodeDigitCount; i++ {
+			codeString += (string)(rand.Intn(10) + 48)
+		}
+
+		newCode, _ := strconv.Atoi(codeString)
+
+		code, success, err := u.UserUseCase.GetEmailVerification(&emailVerification)
+		if err == nil && success {
+			return
+		} else if err != nil {
+			emailVerification.ID = uuid.New()
+			emailVerification.Code = uint(newCode)
+
+			err = u.UserUseCase.NewEmailVerification(&emailVerification)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			newCode = int(code)
+		}
+
+		err = u.Mailer.AccountRegistration(emailVerification.Email, uint(newCode))
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	return ctx.Status(http.StatusOK).Context().Err()
+}
+
+func (u *UserHandler) ValidateEmail(ctx *fiber.Ctx) error {
+	var validateEmail dto.ValidateEmail
+
+	err := ctx.BodyParser(&validateEmail)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"failed to parse request body",
+		)
+	}
+
+	err = u.Validator.Struct(validateEmail)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	err = u.UserUseCase.ValidateEmail(&validateEmail)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid code",
+		)
+	}
+
+	code, success, err := u.UserUseCase.GetEmailVerification(
+		&dto.EmailVerification{
+			Email: validateEmail.Email,
+		},
+	)
+	if err != nil ||
+		!success ||
+		(code != validateEmail.Code) {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid code",
+		)
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "email confirmed",
+	})
+}
+
+func (u *UserHandler) CheckUsername(ctx *fiber.Ctx) error {
+	var user dto.CheckUsername
+
+	q := ctx.Queries()
+
+	user.Username = q["username"]
+
+	err := u.Validator.Struct(user)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	err = u.UserUseCase.CheckUsername(&user)
+	if err == nil {
+		return fiber.NewError(
+			http.StatusConflict,
+		)
+	}
+
+	return ctx.Status(http.StatusOK).Context().Err()
 }
 
 func (u *UserHandler) GetUserInfo(ctx *fiber.Ctx) error {

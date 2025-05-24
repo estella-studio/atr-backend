@@ -8,6 +8,8 @@ import (
 func Migrate(db *gorm.DB) error {
 	err := db.AutoMigrate(
 		entity.User{},
+		entity.UserDetail{},
+		entity.Verification{},
 		entity.PasswordChange{},
 		entity.PasswordResetCode{},
 		entity.Data{},

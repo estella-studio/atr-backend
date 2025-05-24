@@ -58,18 +58,19 @@ func Start() (*fiber.App, uint, error) {
 
 	val := validator.New()
 
-	app := fiber.New(
-		fiber.Config{
-			JSONEncoder: sonic.Marshal,
-			JSONDecoder: sonic.Unmarshal,
-		},
-	)
-
 	jwt := jwt.NewJWT(config)
 
 	mailer := mailer.NewMailer(config)
 
 	middleware := middleware.NewMiddleware(*jwt)
+
+	app := fiber.New(
+		fiber.Config{
+			JSONEncoder: sonic.Marshal,
+			JSONDecoder: sonic.Unmarshal,
+			Prefork:     false,
+		},
+	)
 
 	app.Use(
 		cache.New(),

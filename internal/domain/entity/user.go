@@ -20,6 +20,21 @@ type User struct {
 	Data              []Data
 	PasswordChange    []PasswordChange
 	PasswordResetCode []PasswordResetCode
+	UserDetail        UserDetail
+}
+
+type UserDetail struct {
+	ID           uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	UserID       uuid.UUID `json:"user_id" gorm:"type:char(36)"`
+	ProfileIndex uint      `json:"profile_index" gorm:"type:tinyint unsigned"`
+}
+
+type Verification struct {
+	ID        uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	Email     string    `json:"email" gorm:"type:nvarchar(256);not null;unique"`
+	Code      uint      `json:"code" gorm:"type:varchar(8)"`
+	Success   bool      `json:"success" gorm:"type:boolean"`
+	CreatedAt time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 }
 
 type PasswordChange struct {
@@ -40,45 +55,57 @@ type PasswordResetCode struct {
 }
 
 func (u *User) ParseToDTOResponseRegister() dto.ResponseRegister {
-	return dto.ResponseRegister{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		Name:      u.Name,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
+	var responseRegister dto.ResponseRegister
+
+	responseRegister.ID = u.ID
+	responseRegister.Email = u.Email
+	responseRegister.Username = u.Username
+	responseRegister.Name = u.Name
+	responseRegister.CreatedAt = u.CreatedAt
+	responseRegister.UpdatedAt = u.UpdatedAt
+	responseRegister.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+
+	return responseRegister
 }
 
 func (u *User) ParseToDTOResponseLogin() dto.ResponseLogin {
-	return dto.ResponseLogin{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		Name:      u.Name,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
+	var responseLogin dto.ResponseLogin
+
+	responseLogin.ID = u.ID
+	responseLogin.Email = u.Email
+	responseLogin.Username = u.Username
+	responseLogin.Name = u.Name
+	responseLogin.CreatedAt = u.CreatedAt
+	responseLogin.UpdatedAt = u.UpdatedAt
+	responseLogin.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+
+	return responseLogin
 }
 
 func (u *User) ParseToDTOResponseGetUserInfo() dto.ResponseGetUserInfo {
-	return dto.ResponseGetUserInfo{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		Name:      u.Name,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
+	var responseGetUserInfo dto.ResponseGetUserInfo
+
+	responseGetUserInfo.ID = u.ID
+	responseGetUserInfo.Email = u.Email
+	responseGetUserInfo.Username = u.Username
+	responseGetUserInfo.Name = u.Name
+	responseGetUserInfo.CreatedAt = u.CreatedAt
+	responseGetUserInfo.UpdatedAt = u.UpdatedAt
+	responseGetUserInfo.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+
+	return responseGetUserInfo
 }
 
 func (u *User) ParseToDTOResponseUpdateUserInfo() dto.ResponseUpdateUserInfo {
-	return dto.ResponseUpdateUserInfo{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		Name:      u.Name,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
+	var responseUdpateUserInfo dto.ResponseUpdateUserInfo
+
+	responseUdpateUserInfo.ID = u.ID
+	responseUdpateUserInfo.Email = u.Email
+	responseUdpateUserInfo.Username = u.Username
+	responseUdpateUserInfo.Name = u.Name
+	responseUdpateUserInfo.CreatedAt = u.CreatedAt
+	responseUdpateUserInfo.UpdatedAt = u.UpdatedAt
+	responseUdpateUserInfo.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+
+	return responseUdpateUserInfo
 }
