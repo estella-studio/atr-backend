@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"log"
 	"time"
 
 	"github.com/estella-studio/leon-backend/internal/app/user/repository"
@@ -14,6 +15,10 @@ import (
 type UserUseCaseItf interface {
 	Register(register dto.Register) (dto.ResponseRegister, error)
 	Login(login dto.Login) (dto.ResponseLogin, string, error)
+	NewEmailVerification(emailVerification *dto.EmailVerification) error
+	ValidateEmail(validateEmail *dto.ValidateEmail) error
+	GetEmailVerification(validateEmail *dto.EmailVerification) (uint, bool, error)
+	CheckUsername(userName *dto.CheckUsername) error
 	GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error)
 	UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID uuid.UUID) (dto.ResponseUpdateUserInfo, error)
 	ResetPassword(resetPassword dto.ResetPassword) error
@@ -22,7 +27,7 @@ type UserUseCaseItf interface {
 	CreatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
 	UpdatePasswordChangeEntry(changeID uuid.UUID, userID uuid.UUID) error
 	UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UUID, code uint) error
-	GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error)
+	GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, uint, error)
 	GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error)
 	GetPasswordChangeValidity(id uuid.UUID) (bool, time.Time, error)
 	GetPasswordChangeEntry(id uuid.UUID) (uuid.UUID, error)
@@ -59,14 +64,27 @@ func (u *UserUseCase) Register(register dto.Register) (dto.ResponseRegister, err
 		Name:     register.Name,
 	}
 
+	userDetail := entity.UserDetail{
+		ID:           uuid.New(),
+		UserID:       user.ID,
+		ProfileIndex: register.ProfileIndex,
+	}
+
 	err = u.userRepo.Register(&user)
 	if err != nil {
 		return dto.ResponseRegister{},
 			err
 	}
 
-	return user.ParseToDTOResponseRegister(),
-		nil
+	err = u.userRepo.RegisterUserDetail(&userDetail)
+	if err != nil {
+		return dto.ResponseRegister{},
+			err
+	}
+
+	user.UserDetail = userDetail
+
+	return user.ParseToDTOResponseRegister(), nil
 }
 
 func (u *UserUseCase) Login(login dto.Login) (dto.ResponseLogin, string, error) {
@@ -93,7 +111,54 @@ func (u *UserUseCase) Login(login dto.Login) (dto.ResponseLogin, string, error) 
 			err
 	}
 
+	_ = u.userRepo.GetUserInfo(&user)
+
+	log.Println(user)
+
 	return user.ParseToDTOResponseLogin(), token, nil
+}
+
+func (u *UserUseCase) NewEmailVerification(emailVerification *dto.EmailVerification) error {
+	verification := entity.Verification{
+		ID:    emailVerification.ID,
+		Email: emailVerification.Email,
+		Code:  emailVerification.Code,
+	}
+
+	err := u.userRepo.NewEmailVerification(&verification)
+
+	return err
+}
+
+func (u *UserUseCase) ValidateEmail(validateEmail *dto.ValidateEmail) error {
+	verification := entity.Verification{
+		Email: validateEmail.Email,
+		Code:  validateEmail.Code,
+	}
+
+	err := u.userRepo.ValidateEmail(&verification)
+
+	return err
+}
+
+func (u *UserUseCase) GetEmailVerification(validateEmail *dto.EmailVerification) (uint, bool, error) {
+	verification := entity.Verification{
+		Email: validateEmail.Email,
+	}
+
+	err := u.userRepo.GetEmailVerification(&verification)
+
+	return verification.Code, verification.Success, err
+}
+
+func (u *UserUseCase) CheckUsername(userName *dto.CheckUsername) error {
+	user := entity.User{
+		Username: userName.Username,
+	}
+
+	err := u.userRepo.CheckUsername(&user)
+
+	return err
 }
 
 func (u *UserUseCase) GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, error) {
@@ -118,10 +183,20 @@ func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID u
 		Name:     updateUserInfo.Name,
 	}
 
+	userDetail := entity.UserDetail{
+		UserID:       userID,
+		ProfileIndex: updateUserInfo.ProfileIndex,
+	}
+
 	err := u.userRepo.UpdateUserInfo(&user)
 	if err != nil {
 		return dto.ResponseUpdateUserInfo{},
 			err
+	}
+
+	err = u.userRepo.UdpateUserDetail(&userDetail)
+	if err != nil {
+		log.Println(err)
 	}
 
 	return user.ParseToDTOResponseUpdateUserInfo(), nil
@@ -205,17 +280,16 @@ func (u *UserUseCase) UpdatePasswordResetCode(changeID uuid.UUID, userID uuid.UU
 	return err
 }
 
-func (u *UserUseCase) GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, error) {
+func (u *UserUseCase) GetPasswordResetCode(userID uuid.UUID, code uint) (uuid.UUID, uint, error) {
 	passwordResetCode := entity.PasswordResetCode{
 		UserID: userID,
 	}
 
 	err := u.userRepo.GetPasswordResetCode(
 		&passwordResetCode,
-		dto.ResetPasswordWithCode{Code: code},
 	)
 
-	return passwordResetCode.PasswordChangeID, err
+	return passwordResetCode.PasswordChangeID, passwordResetCode.Code, err
 }
 
 func (u *UserUseCase) GetPasswordResetCodeValidity(userID uuid.UUID) (time.Time, error) {
