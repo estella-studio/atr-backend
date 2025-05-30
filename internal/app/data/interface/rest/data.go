@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -9,6 +11,8 @@ import (
 
 	"github.com/estella-studio/leon-backend/internal/app/data/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
+	"github.com/estella-studio/leon-backend/internal/infra/env"
+	"github.com/estella-studio/leon-backend/internal/infra/s3"
 	"github.com/estella-studio/leon-backend/internal/infra/webdav"
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
@@ -20,19 +24,23 @@ type DataHandler struct {
 	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
 	DataUseCase usecase.DataUseCaseItf
+	Env         *env.Env
 	WebDAV      webdav.WebDAVItf
+	S3          s3.S3Itf
 }
 
 func NewDataHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
 	middleware middleware.MiddlewareItf, dataUseCase usecase.DataUseCaseItf,
-	webdav webdav.WebDAVItf,
+	env *env.Env, webdav webdav.WebDAVItf, s3 s3.S3Itf,
 ) {
 	dataHandler := DataHandler{
 		Validator:   validator,
 		Middleware:  middleware,
 		DataUseCase: dataUseCase,
+		Env:         env,
 		WebDAV:      webdav,
+		S3:          s3,
 	}
 
 	routerGroup = routerGroup.Group("/data")
@@ -44,6 +52,7 @@ func NewDataHandler(
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 	var add dto.Add
+	dataID := uuid.New()
 
 	userID, err := uuid.Parse(ctx.Locals("userID").(string))
 	if err != nil {
@@ -63,10 +72,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 
 	fileContent, err := file.Open()
 	if err != nil {
-		return fiber.NewError(
-			http.StatusInternalServerError,
-			"failed to open file",
-		)
+		return fiber.NewError(http.StatusInternalServerError, "failed to open file")
 	}
 
 	byteContainer, err := io.ReadAll(fileContent)
@@ -79,7 +85,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 
 	add.ID = uuid.New()
 	add.UserID = userID
-	add.Data = byteContainer
+	add.Data = fmt.Sprintf("%s/%v", d.Env.S3BucketURLPrefix, dataID)
 
 	res, err := d.DataUseCase.Add(add)
 	if err != nil {
@@ -90,6 +96,11 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 	}
 
 	go func() {
+		err = d.S3.Upload(context.TODO(), dataID.String(), byteContainer)
+		if err != nil {
+			log.Println(err)
+		}
+
 		err := d.WebDAV.Upload(add.UserID.String(), add.ID.String(), &byteContainer)
 		if err != nil {
 			log.Println(err)

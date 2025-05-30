@@ -9,7 +9,7 @@ import (
 type Add struct {
 	ID     uuid.UUID `json:"id"`
 	UserID uuid.UUID `json:"user_id"`
-	Data   []byte    `json:"data"`
+	Data   string    `json:"data"`
 }
 
 type Retrieve struct {
@@ -28,7 +28,7 @@ type ResponseAdd struct {
 }
 
 type ResponseRetrieve struct {
-	Data []byte `json:"data"`
+	Data string `json:"data"`
 }
 
 type ResponseList struct {
