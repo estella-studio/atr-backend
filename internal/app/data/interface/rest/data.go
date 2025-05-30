@@ -2,12 +2,14 @@ package rest
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/estella-studio/leon-backend/internal/app/data/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
+	"github.com/estella-studio/leon-backend/internal/infra/webdav"
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -18,16 +20,19 @@ type DataHandler struct {
 	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
 	DataUseCase usecase.DataUseCaseItf
+	WebDAV      webdav.WebDAVItf
 }
 
 func NewDataHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
 	middleware middleware.MiddlewareItf, dataUseCase usecase.DataUseCaseItf,
+	webdav webdav.WebDAVItf,
 ) {
 	dataHandler := DataHandler{
 		Validator:   validator,
 		Middleware:  middleware,
 		DataUseCase: dataUseCase,
+		WebDAV:      webdav,
 	}
 
 	routerGroup = routerGroup.Group("/data")
@@ -35,7 +40,6 @@ func NewDataHandler(
 	routerGroup.Post("/add", middleware.Authentication, dataHandler.Add)
 	routerGroup.Get("/get", middleware.Authentication, dataHandler.Retrieve)
 	routerGroup.Get("/list", middleware.Authentication, dataHandler.List)
-	routerGroup.Get("/listpaged", middleware.Authentication, dataHandler.ListPaged)
 }
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
@@ -73,6 +77,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 		)
 	}
 
+	add.ID = uuid.New()
 	add.UserID = userID
 	add.Data = byteContainer
 
@@ -83,6 +88,13 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 			"failed to save data",
 		)
 	}
+
+	go func() {
+		err := d.WebDAV.Upload(add.UserID.String(), add.ID.String(), &byteContainer)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return ctx.Status(http.StatusCreated).JSON(fiber.Map{
 		"message": "data saved",
@@ -141,35 +153,8 @@ func (d *DataHandler) Retrieve(ctx *fiber.Ctx) error {
 }
 
 func (d *DataHandler) List(ctx *fiber.Ctx) error {
-	userID, err := uuid.Parse(ctx.Locals("userID").(string))
-	if err != nil {
-		return fiber.NewError(
-			http.StatusUnauthorized,
-			"user unauthorized",
-		)
-	}
+	var res *[]dto.ResponseList
 
-	res, err := d.DataUseCase.List(userID)
-	if err != nil {
-		return fiber.NewError(
-			http.StatusInternalServerError,
-			"failed to retrieve save data list",
-		)
-	}
-
-	if len(*res) == 0 {
-		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
-			"message": "no save data found",
-		})
-	}
-
-	return ctx.Status(http.StatusOK).JSON(fiber.Map{
-		"message": "retrieved save data list",
-		"payload": res,
-	})
-}
-
-func (d *DataHandler) ListPaged(ctx *fiber.Ctx) error {
 	userID, err := uuid.Parse(ctx.Locals("userID").(string))
 	if err != nil {
 		return fiber.NewError(
@@ -180,23 +165,11 @@ func (d *DataHandler) ListPaged(ctx *fiber.Ctx) error {
 
 	q := ctx.Queries()
 
-	offset, err := strconv.Atoi(q["offset"])
-	if err != nil {
-		return fiber.NewError(
-			http.StatusBadRequest,
-			"offset query required",
-		)
-	}
+	offset, _ := strconv.Atoi(q["offset"])
 
-	limit, err := strconv.Atoi(q["limit"])
-	if err != nil {
-		return fiber.NewError(
-			http.StatusBadRequest,
-			"limit query required",
-		)
-	}
+	limit, _ := strconv.Atoi(q["limit"])
 
-	res, err := d.DataUseCase.ListPaged(userID, offset, limit)
+	res, err = d.DataUseCase.List(userID, offset, limit)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,
@@ -209,6 +182,7 @@ func (d *DataHandler) ListPaged(ctx *fiber.Ctx) error {
 			"message": "no save data found",
 		})
 	}
+
 	return ctx.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "retrieved save data list",
 		"payload": res,
