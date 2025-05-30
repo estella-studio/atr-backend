@@ -43,7 +43,7 @@ func NewS3(env *env.Env) S3Itf {
 }
 
 func New(s *S3) *s3.Client {
-	config, err := config.LoadDefaultConfig(context.TODO(),
+	config, err := config.LoadDefaultConfig(context.Background(),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(s.accessKeyID, s.accessKeySecret, "")),
 		config.WithRegion("auto"))
 	if err != nil {

@@ -96,7 +96,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 	}
 
 	go func() {
-		err = d.S3.Upload(context.TODO(), dataID.String(), byteContainer)
+		err = d.S3.Upload(context.Background(), dataID.String(), byteContainer)
 		if err != nil {
 			log.Println(err)
 		}
