@@ -17,6 +17,7 @@ import (
 	"github.com/estella-studio/leon-backend/internal/infra/jwt"
 	"github.com/estella-studio/leon-backend/internal/infra/mailer"
 	"github.com/estella-studio/leon-backend/internal/infra/mysql"
+	"github.com/estella-studio/leon-backend/internal/infra/webdav"
 	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -64,6 +65,8 @@ func Start() (*fiber.App, uint, error) {
 
 	middleware := middleware.NewMiddleware(*jwt)
 
+	webdav := webdav.NewWebDAV(config)
+
 	app := fiber.New(
 		fiber.Config{
 			JSONEncoder: sonic.Marshal,
@@ -102,7 +105,7 @@ func Start() (*fiber.App, uint, error) {
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
 	dataRepository := datarepository.NewDataMySQL(database)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
-	datahandler.NewDataHandler(v1, val, middleware, dataUseCase)
+	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, webdav)
 
 	log.Printf("listening on port %d", config.AppPort)
 
