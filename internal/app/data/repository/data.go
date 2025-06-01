@@ -38,14 +38,14 @@ func (r *DataMySQL) Retrieve(data *entity.Data, userParam dto.Retrieve) error {
 
 func (r *DataMySQL) List(data *[]entity.Data, userParam dto.List) error {
 	return r.db.Debug().
-		Select("id", "created_at").
+		Select("id, created_at").
 		Find(data, userParam).
 		Error
 }
 
 func (r *DataMySQL) ListPaged(data *[]entity.Data, userParam dto.List, offset int, limit int) error {
 	return r.db.Debug().
-		Select("id", "created_at").
+		Select("id, created_at").
 		Limit(limit).
 		Offset(offset).
 		Find(data, userParam).

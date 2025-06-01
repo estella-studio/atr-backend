@@ -8,6 +8,7 @@ import (
 type Env struct {
 	LimiterMax                          int    `env:"LIMITER_MAX"`
 	LimiterExpirationMinutes            int    `env:"LIMITER_EXPIRATION_MINUTES"`
+	BodyLimit                           int    `env:"BODY_LIMIT_MB"`
 	AccountRegistrationCodeDigitCount   uint   `env:"ACCOUNT_REGISTRATION_CODE_DIGIT_COUNT"`
 	PasswordChangeCodeDigitcount        uint   `env:"PASSWORD_CHANGE_CODE_DIGIT_COUNT"`
 	PasswordChangeExpiryMinutes         int    `env:"PASSWORD_CHANGE_EXPIRY_MINUTES"`
@@ -18,6 +19,11 @@ type Env struct {
 	DBPassword                          string `env:"DB_PASSWORD"`
 	DBHost                              string `env:"DB_HOST"`
 	DBPort                              uint   `env:"DB_PORT"`
+	S3BucketName                        string `env:"S3_BUCKET_NAME"`
+	S3AccountID                         string `env:"S3_ACCOUNT_ID"`
+	S3AccessKeyID                       string `env:"S3_ACCESS_KEY_ID"`
+	S3AccessKeySecret                   string `env:"S3_ACCESS_KEY_SECRET"`
+	S3BucketURLPrefix                   string `env:"S3_BUCKET_URL_PREFIX"`
 	JWTSecretKey                        string `env:"JWT_SECRET_KEY"`
 	JWTExpiredDays                      uint   `env:"JWT_EXPIRED_DAYS"`
 	EmailFrom                           string `env:"EMAIL_FROM"`
@@ -36,6 +42,11 @@ type Env struct {
 	MailtrapCompanyInfoCity             string `env:"MAILTRAP_COMPANY_INFO_CITY"`
 	MailtrapCompanyInfoZipCode          string `env:"MAILTRAP_COMPANY_INFO_ZIP_CODE"`
 	MailtrapCompanyInfoCountry          string `env:"MAILTRAP_COMPANY_INFO_COUNTRY"`
+	WebDAVURL                           string `env:"WEBDAV_URL"`
+	WebDavUser                          string `env:"WEBDAV_USER"`
+	WebDAVPassword                      string `env:"WEBDAV_PASSWORD"`
+	WebDAVPath                          string `env:"WEBDAV_PATH"`
+	WEbDAVPermission                    uint   `env:"WEBDAV_PERMISSION"`
 }
 
 func New() (*Env, error) {

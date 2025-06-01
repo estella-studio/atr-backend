@@ -17,16 +17,31 @@ type User struct {
 	CreatedAt         time.Time      `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 	UpdatedAt         time.Time      `json:"updated_at" gorm:"type:timestamp;autoUpdateTime"`
 	DeletedAt         gorm.DeletedAt `gorm:"index"`
+	UserDetail        UserDetail
+	Friend            Friend
+	FriendRequest     FriendRequest
 	Data              []Data
 	PasswordChange    []PasswordChange
 	PasswordResetCode []PasswordResetCode
-	UserDetail        UserDetail
+	UserReporting     []UserReporting
 }
 
 type UserDetail struct {
 	ID           uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
 	UserID       uuid.UUID `json:"user_id" gorm:"type:char(36)"`
 	ProfileIndex uint      `json:"profile_index" gorm:"type:tinyint unsigned"`
+}
+
+type Friend struct {
+	UserID   uuid.UUID `json:"user_id" gorm:"type:char(36);primaryKey"`
+	FriendID uuid.UUID `json:"friend_id" gorm:"type:char(36);primaryKey"`
+}
+
+type FriendRequest struct {
+	ID       uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	UserID   uuid.UUID `json:"user_id" gorm:"type:char(36)"`
+	FriendID uuid.UUID `json:"friend_id" gorm:"type:char(36)"`
+	Accepted bool      `json:"accepted" gorm:"type:boolean"`
 }
 
 type Verification struct {
@@ -52,6 +67,13 @@ type PasswordResetCode struct {
 	Code             uint           `json:"code" gorm:"type:varchar(8)"`
 	CreatedAt        time.Time      `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 	DeletedAt        gorm.DeletedAt `gorm:"index"`
+}
+
+type UserReporting struct {
+	ID         uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
+	UserID     uuid.UUID `json:"user_id" gorm:"type:char(36)"`
+	ReporterID uuid.UUID `json:"reporter_id" gorm:"type:char(36)"`
+	CreatedAt  time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime"`
 }
 
 func (u *User) ParseToDTOResponseRegister() dto.ResponseRegister {
@@ -96,6 +118,16 @@ func (u *User) ParseToDTOResponseGetUserInfo() dto.ResponseGetUserInfo {
 	return responseGetUserInfo
 }
 
+func (u *User) ParseToDTOResponseGetUserInfoPublic() dto.ResponseGetUserInfoPublic {
+	var responseGetUserInfoPublic dto.ResponseGetUserInfoPublic
+
+	responseGetUserInfoPublic.Username = u.Username
+	responseGetUserInfoPublic.Name = u.Name
+	responseGetUserInfoPublic.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+
+	return responseGetUserInfoPublic
+}
+
 func (u *User) ParseToDTOResponseUpdateUserInfo() dto.ResponseUpdateUserInfo {
 	var responseUdpateUserInfo dto.ResponseUpdateUserInfo
 
@@ -108,4 +140,18 @@ func (u *User) ParseToDTOResponseUpdateUserInfo() dto.ResponseUpdateUserInfo {
 	responseUdpateUserInfo.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
 
 	return responseUdpateUserInfo
+}
+
+func (fr *FriendRequest) ParseToDTOResponseGetFriendRequest() dto.ResponseGetFriendRequest {
+	return dto.ResponseGetFriendRequest{
+		UserID:   fr.UserID,
+		FriendID: fr.FriendID,
+	}
+}
+
+func (u *User) ParseToDTOResponseGetFriendList() dto.ResponseFriendList {
+	return dto.ResponseFriendList{
+		Username: u.Username,
+		Name:     u.Name,
+	}
 }
