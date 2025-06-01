@@ -52,7 +52,6 @@ func NewDataHandler(
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 	var add dto.Add
-	dataID := uuid.New()
 
 	userID, err := uuid.Parse(ctx.Locals("userID").(string))
 	if err != nil {
@@ -85,7 +84,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 
 	add.ID = uuid.New()
 	add.UserID = userID
-	add.Data = fmt.Sprintf("%s/%v", d.Env.S3BucketURLPrefix, dataID)
+	add.Data = fmt.Sprintf("%s/%v", d.Env.S3BucketURLPrefix, add.ID)
 
 	res, err := d.DataUseCase.Add(add)
 	if err != nil {
@@ -96,7 +95,7 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 	}
 
 	go func() {
-		err = d.S3.Upload(context.Background(), dataID.String(), byteContainer)
+		err = d.S3.Upload(context.Background(), add.ID.String(), byteContainer)
 		if err != nil {
 			log.Println(err)
 		}
