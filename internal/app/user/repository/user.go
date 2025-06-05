@@ -2,6 +2,8 @@ package repository
 
 import (
 	"errors"
+	"log"
+	"time"
 
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/domain/entity"
@@ -44,6 +46,7 @@ type UserMySQLItf interface {
 	UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
 	UpdateUserInfo(user *entity.User) error
 	UdpateUserDetail(userDetail *entity.UserDetail) error
+	UpdateLastActivity(userID uuid.UUID) error
 	CheckReportUser(userReporting *entity.UserReporting) error
 	ReportUser(userReporting *entity.UserReporting) error
 	SoftDelete(user *entity.User) error
@@ -221,7 +224,7 @@ func (r *UserMySQL) GetUserInfo(user *entity.User) error {
 	return r.db.Debug().
 		Model(&user).
 		Preload("UserDetail").
-		Select("users.id, users.email, users.username, users.name, users.created_at, users.updated_at, user_details.profile_index").
+		Select("users.id, users.email, users.username, users.name, users.created_at, users.updated_at, user_details.profile_index, user_details.last_activity").
 		Joins("LEFT JOIN user_details ON user_details.user_id = users.id").
 		First(&user).
 		Error
@@ -231,7 +234,7 @@ func (r *UserMySQL) GetUserInfoPublic(user *entity.User) error {
 	return r.db.Debug().
 		Model(&user).
 		Preload("UserDetail").
-		Select("users.username, users.name, user_details.profile_index").
+		Select("users.username, users.name, user_details.profile_index, user_details.last_activity").
 		Joins("LEFT JOIN user_details ON user_details.user_id = users.id").
 		First(&user).
 		Error
@@ -340,6 +343,27 @@ func (r *UserMySQL) UdpateUserDetail(userDetail *entity.UserDetail) error {
 		userDetail.ID = uuid.New()
 
 		err = r.db.Create(userDetail).Error
+	}
+
+	return err
+}
+
+func (r *UserMySQL) UpdateLastActivity(userID uuid.UUID) error {
+	userDetail := entity.UserDetail{
+		LastActivity: time.Now().UTC(),
+	}
+	var err error
+
+	log.Println(userID)
+
+	if r.db.Debug().
+		Table("user_details").
+		Where("user_id = ?", userID).
+		Update("last_activity", userDetail.LastActivity).RowsAffected == 0 {
+		userDetail.ID = uuid.New()
+		userDetail.UserID = userID
+
+		err = r.db.Create(&userDetail).Error
 	}
 
 	return err

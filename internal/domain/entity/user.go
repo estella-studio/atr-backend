@@ -30,6 +30,7 @@ type UserDetail struct {
 	ID           uuid.UUID `json:"id" gorm:"type:char(36);primaryKey"`
 	UserID       uuid.UUID `json:"user_id" gorm:"type:char(36)"`
 	ProfileIndex uint      `json:"profile_index" gorm:"type:tinyint unsigned"`
+	LastActivity time.Time `json:"last_activity" gorm:"type:timestamp;autoUpdateTime"`
 }
 
 type Friend struct {
@@ -114,6 +115,7 @@ func (u *User) ParseToDTOResponseGetUserInfo() dto.ResponseGetUserInfo {
 	responseGetUserInfo.CreatedAt = u.CreatedAt
 	responseGetUserInfo.UpdatedAt = u.UpdatedAt
 	responseGetUserInfo.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+	responseGetUserInfo.UserDetail.LastActivity = u.UserDetail.LastActivity
 
 	return responseGetUserInfo
 }
@@ -124,6 +126,7 @@ func (u *User) ParseToDTOResponseGetUserInfoPublic() dto.ResponseGetUserInfoPubl
 	responseGetUserInfoPublic.Username = u.Username
 	responseGetUserInfoPublic.Name = u.Name
 	responseGetUserInfoPublic.UserDetail.ProfileIndex = u.UserDetail.ProfileIndex
+	responseGetUserInfoPublic.UserDetail.LastActivity = u.UserDetail.LastActivity
 
 	return responseGetUserInfoPublic
 }

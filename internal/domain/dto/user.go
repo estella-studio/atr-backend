@@ -46,7 +46,8 @@ type CheckFriendRequestExist struct {
 
 type AcceptFriendRequest struct {
 	UserID   uuid.UUID `json:"user_id"`
-	FriendID uuid.UUID `json:"friend_id" validate:"required,uuid_rfc4122"`
+	FriendID uuid.UUID `json:"friend_id"`
+	Username string    `json:"username" validate:"required,min=4,max=20"`
 }
 
 type SendFriendRequest struct {
@@ -156,7 +157,8 @@ type ResponseGetUserInfo struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 
@@ -164,7 +166,8 @@ type ResponseGetUserInfoPublic struct {
 	Username   string `json:"username"`
 	Name       string `json:"name"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 

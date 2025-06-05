@@ -43,24 +43,24 @@ func NewUserHandler(
 
 	routerGroup.Post("/register", userHandler.Register)
 	routerGroup.Post("/login", userHandler.Login)
-	routerGroup.Get("/renewtoken", middleware.Authentication, userHandler.RenewToken)
-	routerGroup.Post("/friendrequest", middleware.Authentication, userHandler.SendFriendRequest)
-	routerGroup.Get("/friendrequestsent", middleware.Authentication, userHandler.GetFriendRequestSent)
-	routerGroup.Patch("/friendrequest", middleware.Authentication, userHandler.AcceptFriendRequest)
-	routerGroup.Get("/friends", middleware.Authentication, userHandler.GetFriendList)
+	routerGroup.Get("/renewtoken", middleware.Authentication, middleware.UserStatus, userHandler.RenewToken)
+	routerGroup.Post("/friendrequest", middleware.Authentication, middleware.UserStatus, userHandler.SendFriendRequest)
+	routerGroup.Get("/friendrequestsent", middleware.Authentication, middleware.UserStatus, userHandler.GetFriendRequestSent)
+	routerGroup.Patch("/friendrequest", middleware.Authentication, middleware.UserStatus, userHandler.AcceptFriendRequest)
+	routerGroup.Get("/friends", middleware.Authentication, middleware.UserStatus, userHandler.GetFriendList)
 	routerGroup.Post("/emailverification", userHandler.NewEmailVerification)
 	routerGroup.Post("/validateemail", userHandler.ValidateEmail)
 	routerGroup.Get("/checkusername", userHandler.CheckUsername)
-	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
+	routerGroup.Get("/info", middleware.Authentication, middleware.UserStatus, userHandler.GetUserInfo)
 	routerGroup.Get("/publicinfo", userHandler.GetUserInfoPublic)
-	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
+	routerGroup.Patch("/update", middleware.Authentication, middleware.UserStatus, userHandler.UpdateUserInfo)
 	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
 	routerGroup.Post("/resetpassword", userHandler.ResetPasswordWithID)
 	routerGroup.Get("/checkpasswordresetcode", userHandler.CheckPasswordResetCode)
 	routerGroup.Post("/resetpasswordwithcode", userHandler.ResetPasswordWithCode)
-	routerGroup.Post("/changepassword", middleware.Authentication, userHandler.ChangePassword)
-	routerGroup.Post("/report", middleware.Authentication, userHandler.ReportUser)
-	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
+	routerGroup.Post("/changepassword", middleware.Authentication, middleware.UserStatus, userHandler.ChangePassword)
+	routerGroup.Post("/report", middleware.Authentication, middleware.UserStatus, userHandler.ReportUser)
+	routerGroup.Delete("/delete", middleware.Authentication, middleware.UserStatus, userHandler.SoftDelete)
 }
 
 func (u *UserHandler) Register(ctx *fiber.Ctx) error {
@@ -343,6 +343,14 @@ func (u *UserHandler) AcceptFriendRequest(ctx *fiber.Ctx) error {
 	}
 
 	acceptFriendRequest.UserID = userID
+
+	acceptFriendRequest.FriendID, err = u.UserUseCase.GetUserIDFromUsername(acceptFriendRequest.Username)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusNotFound,
+			"user not found",
+		)
+	}
 
 	err = u.UserUseCase.AcceptFriendRequest(&acceptFriendRequest)
 	if err != nil {

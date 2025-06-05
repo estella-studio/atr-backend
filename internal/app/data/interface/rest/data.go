@@ -45,9 +45,9 @@ func NewDataHandler(
 
 	routerGroup = routerGroup.Group("/data")
 
-	routerGroup.Post("/add", middleware.Authentication, dataHandler.Add)
-	routerGroup.Get("/get", middleware.Authentication, dataHandler.Retrieve)
-	routerGroup.Get("/list", middleware.Authentication, dataHandler.List)
+	routerGroup.Post("/add", middleware.Authentication, middleware.UserStatus, dataHandler.Add)
+	routerGroup.Get("/get", middleware.Authentication, middleware.UserStatus, dataHandler.Retrieve)
+	routerGroup.Get("/list", middleware.Authentication, middleware.UserStatus, dataHandler.List)
 }
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {

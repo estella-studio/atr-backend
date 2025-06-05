@@ -17,8 +17,8 @@ func (m *Middleware) Authentication(ctx *fiber.Ctx) error {
 		)
 	}
 
-	bearertoken := authToken[0]
-	token := strings.Split(bearertoken, " ")
+	bearerToken := authToken[0]
+	token := strings.Split(bearerToken, " ")
 
 	userID, err := m.jwt.ValidateToken(token[1])
 	if err != nil {
