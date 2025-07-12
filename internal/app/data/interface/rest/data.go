@@ -9,7 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/estella-studio/leon-backend/internal/app/data/usecase"
+	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
+	userusecase "github.com/estella-studio/leon-backend/internal/app/user/usecase"
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
 	"github.com/estella-studio/leon-backend/internal/infra/env"
 	"github.com/estella-studio/leon-backend/internal/infra/s3"
@@ -23,7 +24,8 @@ import (
 type DataHandler struct {
 	Validator   *validator.Validate
 	Middleware  middleware.MiddlewareItf
-	DataUseCase usecase.DataUseCaseItf
+	DataUseCase datausecase.DataUseCaseItf
+	UserUseCase userusecase.UserUseCaseItf
 	Env         *env.Env
 	WebDAV      webdav.WebDAVItf
 	S3          s3.S3Itf
@@ -31,13 +33,15 @@ type DataHandler struct {
 
 func NewDataHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
-	middleware middleware.MiddlewareItf, dataUseCase usecase.DataUseCaseItf,
-	env *env.Env, webdav webdav.WebDAVItf, s3 s3.S3Itf,
+	middleware middleware.MiddlewareItf, dataUseCase datausecase.DataUseCaseItf,
+	userUseCase userusecase.UserUseCaseItf, env *env.Env,
+	webdav webdav.WebDAVItf, s3 s3.S3Itf,
 ) {
 	dataHandler := DataHandler{
 		Validator:   validator,
 		Middleware:  middleware,
 		DataUseCase: dataUseCase,
+		UserUseCase: userUseCase,
 		Env:         env,
 		WebDAV:      webdav,
 		S3:          s3,
@@ -48,6 +52,7 @@ func NewDataHandler(
 	routerGroup.Post("/add", middleware.Authentication, middleware.UserStatus, dataHandler.Add)
 	routerGroup.Get("/get", middleware.Authentication, middleware.UserStatus, dataHandler.Retrieve)
 	routerGroup.Get("/list", middleware.Authentication, middleware.UserStatus, dataHandler.List)
+	routerGroup.Get("/listpublic", middleware.Authentication, middleware.UserStatus, dataHandler.ListPublic)
 }
 
 func (d *DataHandler) Add(ctx *fiber.Ctx) error {
@@ -62,7 +67,23 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 		)
 	}
 
-	file, err := ctx.FormFile("data")
+	add.Type, err = strconv.ParseBool(ctx.Get("X-Type"))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	err = d.Validator.Struct(add)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+	}
+
+	file, err := ctx.FormFile("file")
 	if err != nil {
 		return fiber.NewError(
 			http.StatusBadRequest,
@@ -174,13 +195,46 @@ func (d *DataHandler) List(ctx *fiber.Ctx) error {
 		)
 	}
 
-	q := ctx.Queries()
+	offset, _ := strconv.Atoi(ctx.Get("X-Offset"))
 
-	offset, _ := strconv.Atoi(q["offset"])
-
-	limit, _ := strconv.Atoi(q["limit"])
+	limit, _ := strconv.Atoi(ctx.Get("X-Limit"))
 
 	res, err = d.DataUseCase.List(userID, offset, limit)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to retrieve save data list",
+		)
+	}
+
+	if len(*res) == 0 {
+		return ctx.Status(http.StatusNotFound).JSON(fiber.Map{
+			"message": "no save data found",
+		})
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "retrieved save data list",
+		"payload": res,
+	})
+}
+
+func (d *DataHandler) ListPublic(ctx *fiber.Ctx) error {
+	var res *[]dto.ResponseList
+
+	userID, err := d.UserUseCase.GetUserIDFromUsername(ctx.Get("X-Username"))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusBadRequest,
+			"invalid username",
+		)
+	}
+
+	offset, _ := strconv.Atoi(ctx.Get("X-Offset"))
+
+	limit, _ := strconv.Atoi(ctx.Get("X-Limit"))
+
+	res, err = d.DataUseCase.ListPublic(userID, offset, limit)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,

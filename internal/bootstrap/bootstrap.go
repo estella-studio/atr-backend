@@ -106,11 +106,11 @@ func Start() (*fiber.App, uint, error) {
 
 	middleware := middleware.NewMiddleware(*jwt, userRepository)
 
-	pinghandler.NewPingHandler(v1)
+	pinghandler.NewPingHandler(v1, middleware)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
-	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, config, webdav, s3Config)
+	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, userUseCase, config, webdav, s3Config)
 
 	log.Printf("listening on port %d", config.AppPort)
 

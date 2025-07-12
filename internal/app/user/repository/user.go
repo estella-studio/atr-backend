@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/estella-studio/leon-backend/internal/domain/dto"
@@ -17,9 +16,12 @@ type UserMySQLItf interface {
 	Login(user *entity.User) error
 	CheckFriendRequestExist(friendRequest *entity.FriendRequest) error
 	CheckFriendRequestFromFriend(friendRequest *entity.FriendRequest) error
+	CheckAcceptFriend(userDetail *entity.UserDetail) error
 	NewFriendRequest(friendRequest *entity.FriendRequest) error
 	GetFriendRequestSent(friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest) error
 	GetFriendRequestSentPaged(friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest, offset int, limit int) error
+	GetFriendRequestReceived(friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest) error
+	GetFriendRequestReceivedPaged(friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest, offset int, limit int) error
 	AcceptFriendRequest(friendRequest *entity.FriendRequest) error
 	GetFriendList(user *[]entity.User, userID uuid.UUID) error
 	AddFriendList(friend *entity.Friend) error
@@ -45,7 +47,7 @@ type UserMySQLItf interface {
 	UpdatePasswordResetCode(passwordResetCode *entity.PasswordResetCode) error
 	UpdatePasswordChangeEntry(passwordChange *entity.PasswordChange) error
 	UpdateUserInfo(user *entity.User) error
-	UdpateUserDetail(userDetail *entity.UserDetail) error
+	UpdateUserDetail(userDetail *entity.UserDetail) error
 	UpdateLastActivity(userID uuid.UUID) error
 	CheckReportUser(userReporting *entity.UserReporting) error
 	ReportUser(userReporting *entity.UserReporting) error
@@ -97,6 +99,13 @@ func (r *UserMySQL) CheckFriendRequestFromFriend(friendRequest *entity.FriendReq
 		Error
 }
 
+func (r *UserMySQL) CheckAcceptFriend(userDetail *entity.UserDetail) error {
+	return r.db.Debug().
+		Select("accept_friedn").
+		Where("user_id = ", userDetail.UserID).
+		Error
+}
+
 func (r *UserMySQL) NewFriendRequest(friendRequest *entity.FriendRequest) error {
 	return r.db.Debug().
 		Create(friendRequest).
@@ -114,6 +123,34 @@ func (r *UserMySQL) GetFriendRequestSent(
 }
 
 func (r *UserMySQL) GetFriendRequestSentPaged(
+	friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest,
+	offset int, limit int,
+) error {
+	return r.db.Debug().
+		Select("user_id, friend_id").
+		Where("accepted = ? ", false).
+		Limit(limit).
+		Offset(offset).
+		Find(friendRequest, userParam).
+		Error
+}
+
+func (r *UserMySQL) GetFriendRequestReceived(
+	friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest,
+) error {
+	return r.db.Debug().
+		Raw(`
+		SELECT users.username, users.name FROM users WHERE id =
+		(
+			SELECT friend_id FROM friend_requests WHERE accepted = false AND friend_id = ?
+		)
+		`,
+			userParam.FriendID).
+		Scan(&friendRequest).
+		Error
+}
+
+func (r *UserMySQL) GetFriendRequestReceivedPaged(
 	friendRequest *[]entity.FriendRequest, userParam dto.GetFriendRequest,
 	offset int, limit int,
 ) error {
@@ -224,7 +261,7 @@ func (r *UserMySQL) GetUserInfo(user *entity.User) error {
 	return r.db.Debug().
 		Model(&user).
 		Preload("UserDetail").
-		Select("users.id, users.email, users.username, users.name, users.created_at, users.updated_at, user_details.profile_index, user_details.last_activity").
+		Select("users.id, users.email, users.username, users.name, users.created_at, users.updated_at, user_details.*").
 		Joins("LEFT JOIN user_details ON user_details.user_id = users.id").
 		First(&user).
 		Error
@@ -234,7 +271,7 @@ func (r *UserMySQL) GetUserInfoPublic(user *entity.User) error {
 	return r.db.Debug().
 		Model(&user).
 		Preload("UserDetail").
-		Select("users.username, users.name, user_details.profile_index, user_details.last_activity").
+		Select("users.username, users.name, user_details.profile_index, user_details.*").
 		Joins("LEFT JOIN user_details ON user_details.user_id = users.id").
 		First(&user).
 		Error
@@ -334,15 +371,18 @@ func (r *UserMySQL) UpdateUserInfo(user *entity.User) error {
 		Error
 }
 
-func (r *UserMySQL) UdpateUserDetail(userDetail *entity.UserDetail) error {
+func (r *UserMySQL) UpdateUserDetail(userDetail *entity.UserDetail) error {
 	var err error
 
 	if r.db.Debug().
-		Where("user_id = ?", userDetail.UserID).
-		Updates(userDetail).RowsAffected == 0 {
-		userDetail.ID = uuid.New()
+		Model(&userDetail).
+		Where("user_id = ?", userDetail.UserID).Error != nil {
 
 		err = r.db.Create(userDetail).Error
+	} else {
+		err = r.db.Debug().
+			Updates(&userDetail).
+			Error
 	}
 
 	return err
@@ -354,13 +394,10 @@ func (r *UserMySQL) UpdateLastActivity(userID uuid.UUID) error {
 	}
 	var err error
 
-	log.Println(userID)
-
 	if r.db.Debug().
 		Table("user_details").
 		Where("user_id = ?", userID).
 		Update("last_activity", userDetail.LastActivity).RowsAffected == 0 {
-		userDetail.ID = uuid.New()
 		userDetail.UserID = userID
 
 		err = r.db.Create(&userDetail).Error

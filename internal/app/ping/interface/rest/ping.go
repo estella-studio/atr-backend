@@ -3,17 +3,22 @@ package rest
 import (
 	"net/http"
 
+	"github.com/estella-studio/leon-backend/internal/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
-type PingHandler struct{}
+type PingHandler struct {
+	Middleware middleware.MiddlewareItf
+}
 
-func NewPingHandler(routerGroup fiber.Router) {
-	pingHandler := PingHandler{}
+func NewPingHandler(routerGroup fiber.Router, middleware middleware.MiddlewareItf) {
+	pingHandler := PingHandler{
+		Middleware: middleware,
+	}
 
 	routerGroup = routerGroup.Group("/ping")
 
-	routerGroup.Get("/", pingHandler.Ping)
+	routerGroup.Get("/", middleware.Authentication, middleware.UserStatus, pingHandler.Ping)
 }
 
 func (p *PingHandler) Ping(ctx *fiber.Ctx) error {
