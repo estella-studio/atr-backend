@@ -1,5 +1,7 @@
 # LEON Backend
 
+[![wakatime](https://wakatime.com/badge/user/a36f3ff7-c578-475d-8b27-4320e7bfaf4a/project/014c01e4-fd4d-487a-b920-469c28fd6e24.svg)](https://wakatime.com/badge/user/a36f3ff7-c578-475d-8b27-4320e7bfaf4a/project/014c01e4-fd4d-487a-b920-469c28fd6e24)
+
 ## Deploy
 
 - Copy and modify `.env`

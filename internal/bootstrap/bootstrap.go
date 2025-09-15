@@ -64,8 +64,6 @@ func Start() (*fiber.App, uint, error) {
 
 	mailer := mailer.NewMailer(config)
 
-	middleware := middleware.NewMiddleware(*jwt)
-
 	webdav := webdav.NewWebDAV(config)
 
 	s3Config := s3.NewS3(config)
@@ -103,13 +101,16 @@ func Start() (*fiber.App, uint, error) {
 
 	v1 := app.Group("/api/v1")
 
-	pinghandler.NewPingHandler(v1)
 	userRepository := userrepository.NewUserMySQL(database)
+	dataRepository := datarepository.NewDataMySQL(database)
+
+	middleware := middleware.NewMiddleware(*jwt, userRepository)
+
+	pinghandler.NewPingHandler(v1, middleware)
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
-	dataRepository := datarepository.NewDataMySQL(database)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
-	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, config, webdav, s3Config)
+	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, userUseCase, config, webdav, s3Config)
 
 	log.Printf("listening on port %d", config.AppPort)
 

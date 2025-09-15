@@ -12,6 +12,7 @@ type DataUseCaseItf interface {
 	Add(add dto.Add) (dto.ResponseAdd, error)
 	Retrieve(retrieve dto.Retrieve) (dto.ResponseRetrieve, error)
 	List(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseList, error)
+	ListPublic(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseList, error)
 }
 
 type DataUseCase struct {
@@ -30,6 +31,7 @@ func (d *DataUseCase) Add(add dto.Add) (dto.ResponseAdd, error) {
 	data := entity.Data{
 		ID:     add.ID,
 		UserID: add.UserID,
+		Type:   add.Type,
 		Data:   add.Data,
 	}
 
@@ -66,6 +68,31 @@ func (d *DataUseCase) List(userID uuid.UUID, offset int, limit int) (*[]dto.Resp
 
 	} else {
 		err := d.dataRepo.ListPaged(data, dto.List{UserID: userID}, offset, limit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res := make([]dto.ResponseList, len(*data))
+
+	for i, data := range *data {
+		res[i] = data.ParseToDTOResponseList()
+	}
+
+	return &res, nil
+}
+
+func (d *DataUseCase) ListPublic(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseList, error) {
+	data := new([]entity.Data)
+
+	if offset == 0 && limit == 0 {
+		err := d.dataRepo.ListPublic(data, dto.List{UserID: userID})
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		err := d.dataRepo.ListPublicPaged(data, dto.List{UserID: userID}, offset, limit)
 		if err != nil {
 			return nil, err
 		}

@@ -11,6 +11,8 @@ type DataMySQLItf interface {
 	Retrieve(data *entity.Data, userParam dto.Retrieve) error
 	List(data *[]entity.Data, userParam dto.List) error
 	ListPaged(data *[]entity.Data, userParam dto.List, offset int, limit int) error
+	ListPublic(data *[]entity.Data, userParam dto.List) error
+	ListPublicPaged(data *[]entity.Data, userParam dto.List, offset int, limit int) error
 }
 
 type DataMySQL struct {
@@ -31,21 +33,39 @@ func (r *DataMySQL) Add(data *entity.Data) error {
 
 func (r *DataMySQL) Retrieve(data *entity.Data, userParam dto.Retrieve) error {
 	return r.db.Debug().
-		Select("data").
+		Select("type, data").
 		First(data, userParam).
 		Error
 }
 
 func (r *DataMySQL) List(data *[]entity.Data, userParam dto.List) error {
 	return r.db.Debug().
-		Select("id, created_at").
+		Select("id, type, created_at").
 		Find(data, userParam).
 		Error
 }
 
 func (r *DataMySQL) ListPaged(data *[]entity.Data, userParam dto.List, offset int, limit int) error {
 	return r.db.Debug().
-		Select("id, created_at").
+		Select("id, type, created_at").
+		Limit(limit).
+		Offset(offset).
+		Find(data, userParam).
+		Error
+}
+
+func (r *DataMySQL) ListPublic(data *[]entity.Data, userParam dto.List) error {
+	return r.db.Debug().
+		Select("id, type, created_at").
+		Where("type = ? ", true).
+		Find(data, userParam).
+		Error
+}
+
+func (r *DataMySQL) ListPublicPaged(data *[]entity.Data, userParam dto.List, offset int, limit int) error {
+	return r.db.Debug().
+		Select("id, type, created_at").
+		Where("type = ? ", true).
 		Limit(limit).
 		Offset(offset).
 		Find(data, userParam).

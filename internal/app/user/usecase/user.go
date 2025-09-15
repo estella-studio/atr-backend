@@ -22,6 +22,7 @@ type UserUseCaseItf interface {
 	CheckFriendRequestFromFriend(friendID uuid.UUID) (bool, error)
 	NewFriendRequest(sendFriendRequest *dto.SendFriendRequest) error
 	GetFriendRequestSent(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseGetFriendRequest, error)
+	GetFriendRequestReceived(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseGetFriendRequest, error)
 	AcceptFriendRequest(acceptFriendRequest *dto.AcceptFriendRequest) error
 	GetFriendList(userID uuid.UUID) (*[]dto.ResponseFriendList, error)
 	NewEmailVerification(emailVerification *dto.EmailVerification) error
@@ -77,8 +78,8 @@ func (u *UserUseCase) Register(register dto.Register) (dto.ResponseRegister, err
 	}
 
 	userDetail := entity.UserDetail{
-		ID:           uuid.New(),
 		UserID:       user.ID,
+		AcceptFriend: true,
 		ProfileIndex: register.ProfileIndex,
 	}
 
@@ -124,6 +125,13 @@ func (u *UserUseCase) Login(login dto.Login) (dto.ResponseLogin, string, error) 
 	}
 
 	_ = u.userRepo.GetUserInfo(&user)
+
+	go func() {
+		err := u.userRepo.UpdateLastActivity(user.ID)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return user.ParseToDTOResponseLogin(), token, nil
 }
@@ -181,7 +189,16 @@ func (u *UserUseCase) NewFriendRequest(sendFriendRequest *dto.SendFriendRequest)
 		Accepted: false,
 	}
 
-	err := u.userRepo.NewFriendRequest(&friendRequest)
+	userDetail := entity.UserDetail{
+		UserID: sendFriendRequest.FriendID,
+	}
+
+	err := u.userRepo.CheckAcceptFriend(&userDetail)
+	if err != nil || !userDetail.AcceptFriend {
+		return errors.New("user is currently not accepting friend requests")
+	}
+
+	err = u.userRepo.NewFriendRequest(&friendRequest)
 
 	return err
 }
@@ -196,6 +213,30 @@ func (u *UserUseCase) GetFriendRequestSent(userID uuid.UUID, offset int, limit i
 		}
 	} else {
 		err := u.userRepo.GetFriendRequestSentPaged(friendRequest, dto.GetFriendRequest{UserID: userID}, offset, limit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res := make([]dto.ResponseGetFriendRequest, len(*friendRequest))
+
+	for i, friendRequest := range *friendRequest {
+		res[i] = friendRequest.ParseToDTOResponseGetFriendRequest()
+	}
+
+	return &res, nil
+}
+
+func (u *UserUseCase) GetFriendRequestReceived(userID uuid.UUID, offset int, limit int) (*[]dto.ResponseGetFriendRequest, error) {
+	friendRequest := new([]entity.FriendRequest)
+
+	if offset == 0 && limit == 0 {
+		err := u.userRepo.GetFriendRequestReceived(friendRequest, dto.GetFriendRequest{FriendID: userID})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := u.userRepo.GetFriendRequestReceivedPaged(friendRequest, dto.GetFriendRequest{FriendID: userID}, offset, limit)
 		if err != nil {
 			return nil, err
 		}
@@ -335,6 +376,8 @@ func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID u
 	userDetail := entity.UserDetail{
 		UserID:       userID,
 		ProfileIndex: updateUserInfo.ProfileIndex,
+		Bio:          updateUserInfo.Bio,
+		AcceptFriend: updateUserInfo.AcceptFriend,
 	}
 
 	err := u.userRepo.UpdateUserInfo(&user)
@@ -343,7 +386,7 @@ func (u *UserUseCase) UpdateUserInfo(updateUserInfo dto.UpdateUserInfo, userID u
 			err
 	}
 
-	err = u.userRepo.UdpateUserDetail(&userDetail)
+	err = u.userRepo.UpdateUserDetail(&userDetail)
 	if err != nil {
 		log.Println(err)
 	}

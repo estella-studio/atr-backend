@@ -25,9 +25,10 @@ type RenewToken struct {
 }
 
 type UserDetail struct {
-	ID           uuid.UUID `json:"id"`
 	UserID       uuid.UUID `json:"user_id"`
 	ProfileIndex uint      `json:"profile_index" validate:"omitempty"`
+	AcceptFriend bool      `json:"accept_friend"`
+	Bio          string    `json:"bio"`
 }
 
 type AddFriend struct {
@@ -46,7 +47,8 @@ type CheckFriendRequestExist struct {
 
 type AcceptFriendRequest struct {
 	UserID   uuid.UUID `json:"user_id"`
-	FriendID uuid.UUID `json:"friend_id" validate:"required,uuid_rfc4122"`
+	FriendID uuid.UUID `json:"friend_id"`
+	Username string    `json:"username" validate:"required,min=4,max=20"`
 }
 
 type SendFriendRequest struct {
@@ -76,6 +78,8 @@ type UpdateUserInfo struct {
 	Password     string `json:"password" validate:"omitempty,min=4"`
 	Name         string `json:"name" validate:"omitempty,min=3,max=29"`
 	ProfileIndex uint   `json:"profile_index" validate:"omitempty"`
+	AcceptFriend bool   `json:"accept_friend" validate:"omitempty,boolean"`
+	Bio          string `json:"bio" validate:"omitempty,min=0,max=128"`
 }
 
 type EmailVerification struct {
@@ -144,7 +148,10 @@ type ResponseLogin struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		AcceptFriend bool      `json:"accept_friend"`
+		Bio          string    `json:"bio"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 
@@ -156,7 +163,10 @@ type ResponseGetUserInfo struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		AcceptFriend bool      `json:"accept_friend"`
+		Bio          string    `json:"bio"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 
@@ -164,7 +174,10 @@ type ResponseGetUserInfoPublic struct {
 	Username   string `json:"username"`
 	Name       string `json:"name"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		AcceptFriend bool      `json:"accept_friend"`
+		Bio          string    `json:"bio"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 
@@ -176,13 +189,17 @@ type ResponseUpdateUserInfo struct {
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 	UserDetail struct {
-		ProfileIndex uint `json:"profile_index"`
+		ProfileIndex uint      `json:"profile_index"`
+		AcceptFriend bool      `json:"accept_friend"`
+		Bio          string    `json:"bio"`
+		LastActivity time.Time `json:"last_activity"`
 	} `json:"user_detail"`
 }
 
 type ResponseGetFriendRequest struct {
 	UserID   uuid.UUID `json:"user_id"`
 	FriendID uuid.UUID `json:"friend_id"`
+	Username string    `json:"username"`
 }
 
 type ResponseFriendList struct {

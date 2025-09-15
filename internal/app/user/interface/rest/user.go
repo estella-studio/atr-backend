@@ -43,24 +43,25 @@ func NewUserHandler(
 
 	routerGroup.Post("/register", userHandler.Register)
 	routerGroup.Post("/login", userHandler.Login)
-	routerGroup.Get("/renewtoken", middleware.Authentication, userHandler.RenewToken)
-	routerGroup.Post("/friendrequest", middleware.Authentication, userHandler.SendFriendRequest)
-	routerGroup.Get("/friendrequestsent", middleware.Authentication, userHandler.GetFriendRequestSent)
-	routerGroup.Patch("/friendrequest", middleware.Authentication, userHandler.AcceptFriendRequest)
-	routerGroup.Get("/friends", middleware.Authentication, userHandler.GetFriendList)
+	routerGroup.Get("/renewtoken", middleware.Authentication, middleware.UserStatus, userHandler.RenewToken)
+	routerGroup.Post("/friendrequest", middleware.Authentication, middleware.UserStatus, userHandler.SendFriendRequest)
+	routerGroup.Get("/friendrequestsent", middleware.Authentication, middleware.UserStatus, userHandler.GetFriendRequestSent)
+	routerGroup.Get("/friendrequestreceived", middleware.Authentication, middleware.UserStatus, userHandler.GetFriendRequestReceived)
+	routerGroup.Patch("/friendrequest", middleware.Authentication, middleware.UserStatus, userHandler.AcceptFriendRequest)
+	routerGroup.Get("/friends", middleware.Authentication, middleware.UserStatus, userHandler.GetFriendList)
 	routerGroup.Post("/emailverification", userHandler.NewEmailVerification)
 	routerGroup.Post("/validateemail", userHandler.ValidateEmail)
 	routerGroup.Get("/checkusername", userHandler.CheckUsername)
-	routerGroup.Get("/info", middleware.Authentication, userHandler.GetUserInfo)
+	routerGroup.Get("/info", middleware.Authentication, middleware.UserStatus, userHandler.GetUserInfo)
 	routerGroup.Get("/publicinfo", userHandler.GetUserInfoPublic)
-	routerGroup.Patch("/update", middleware.Authentication, userHandler.UpdateUserInfo)
+	routerGroup.Patch("/update", middleware.Authentication, middleware.UserStatus, userHandler.UpdateUserInfo)
 	routerGroup.Get("/resetpassword", userHandler.ResetPassword)
 	routerGroup.Post("/resetpassword", userHandler.ResetPasswordWithID)
 	routerGroup.Get("/checkpasswordresetcode", userHandler.CheckPasswordResetCode)
 	routerGroup.Post("/resetpasswordwithcode", userHandler.ResetPasswordWithCode)
-	routerGroup.Post("/changepassword", middleware.Authentication, userHandler.ChangePassword)
-	routerGroup.Post("/report", middleware.Authentication, userHandler.ReportUser)
-	routerGroup.Delete("/delete", middleware.Authentication, userHandler.SoftDelete)
+	routerGroup.Post("/changepassword", middleware.Authentication, middleware.UserStatus, userHandler.ChangePassword)
+	routerGroup.Post("/report", middleware.Authentication, middleware.UserStatus, userHandler.ReportUser)
+	routerGroup.Delete("/delete", middleware.Authentication, middleware.UserStatus, userHandler.SoftDelete)
 }
 
 func (u *UserHandler) Register(ctx *fiber.Ctx) error {
@@ -266,6 +267,13 @@ func (u *UserHandler) SendFriendRequest(ctx *fiber.Ctx) error {
 
 	err = u.UserUseCase.NewFriendRequest(&sendFriendRequest)
 	if err != nil {
+		if strings.Contains(err.Error(), "user is currently not accepting friend requests") {
+			return fiber.NewError(
+				http.StatusForbidden,
+				err.Error(),
+			)
+		}
+
 		return fiber.NewError(
 			http.StatusInternalServerError,
 			"failed to send friend request",
@@ -288,13 +296,47 @@ func (u *UserHandler) GetFriendRequestSent(ctx *fiber.Ctx) error {
 		)
 	}
 
-	q := ctx.Queries()
+	offset, _ := strconv.Atoi(ctx.Get("X-Offset"))
 
-	offset, _ := strconv.Atoi(q["offset"])
-
-	limit, _ := strconv.Atoi(q["limit"])
+	limit, _ := strconv.Atoi(ctx.Get("X-Limit"))
 
 	res, err = u.UserUseCase.GetFriendRequestSent(userID, offset, limit)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusInternalServerError,
+			"failed to retrieve friend request list",
+		)
+	}
+
+	if len(*res) == 0 {
+		return fiber.NewError(
+			http.StatusNotFound,
+			"no friend request",
+		)
+	}
+
+	return ctx.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "retrieved friend request list",
+		"payload": res,
+	})
+}
+
+func (u *UserHandler) GetFriendRequestReceived(ctx *fiber.Ctx) error {
+	var res *[]dto.ResponseGetFriendRequest
+
+	userID, err := uuid.Parse(ctx.Locals("userID").(string))
+	if err != nil {
+		return fiber.NewError(
+			http.StatusUnauthorized,
+			"user unauthorized",
+		)
+	}
+
+	offset, _ := strconv.Atoi(ctx.Get("X-Offset"))
+
+	limit, _ := strconv.Atoi(ctx.Get("X-Limit"))
+
+	res, err = u.UserUseCase.GetFriendRequestReceived(userID, offset, limit)
 	if err != nil {
 		return fiber.NewError(
 			http.StatusInternalServerError,
@@ -343,6 +385,14 @@ func (u *UserHandler) AcceptFriendRequest(ctx *fiber.Ctx) error {
 	}
 
 	acceptFriendRequest.UserID = userID
+
+	acceptFriendRequest.FriendID, err = u.UserUseCase.GetUserIDFromUsername(acceptFriendRequest.Username)
+	if err != nil {
+		return fiber.NewError(
+			http.StatusNotFound,
+			"user not found",
+		)
+	}
 
 	err = u.UserUseCase.AcceptFriendRequest(&acceptFriendRequest)
 	if err != nil {
@@ -481,13 +531,7 @@ func (u *UserHandler) ValidateEmail(ctx *fiber.Ctx) error {
 func (u *UserHandler) CheckUsername(ctx *fiber.Ctx) error {
 	var user dto.CheckUsername
 
-	q := ctx.Queries()
-
-	if len(ctx.Get("Username")) != 0 {
-		user.Username = ctx.Get("Username")
-	} else if len(q["username"]) != 0 {
-		user.Username = q["username"]
-	}
+	user.Username = ctx.Get("X-Username")
 
 	err := u.Validator.Struct(user)
 	if err != nil {
@@ -533,9 +577,7 @@ func (u *UserHandler) GetUserInfo(ctx *fiber.Ctx) error {
 func (u *UserHandler) GetUserInfoPublic(ctx *fiber.Ctx) error {
 	var getUserInfoPublic dto.GetUserInfoPublic
 
-	q := ctx.Queries()
-
-	getUserInfoPublic.Username = q["Username"]
+	getUserInfoPublic.Username = ctx.Get("X-Username")
 
 	err := u.Validator.Struct(getUserInfoPublic)
 	if err != nil {
@@ -693,9 +735,7 @@ func (u *UserHandler) ResetPassword(ctx *fiber.Ctx) error {
 func (u *UserHandler) ResetPasswordWithID(ctx *fiber.Ctx) error {
 	var user dto.ChangePassword
 
-	q := ctx.Queries()
-
-	id, err := uuid.Parse(q["id"])
+	id, err := uuid.Parse(ctx.Get("X-ID"))
 	if err != nil {
 		return fiber.NewError(
 			http.StatusBadRequest,
