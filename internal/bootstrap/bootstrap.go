@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/bytedance/sonic"
 	datahandler "github.com/estella-studio/leon-backend/internal/app/data/interface/rest"
 	datarepository "github.com/estella-studio/leon-backend/internal/app/data/repository"
 	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
@@ -70,10 +69,8 @@ func Start() (*fiber.App, uint, error) {
 
 	app := fiber.New(
 		fiber.Config{
-			JSONEncoder: sonic.Marshal,
-			JSONDecoder: sonic.Unmarshal,
-			Prefork:     false,
-			BodyLimit:   config.BodyLimit * 1024 * 1024,
+			Prefork:   false,
+			BodyLimit: config.BodyLimit * 1024 * 1024,
 		},
 	)
 
