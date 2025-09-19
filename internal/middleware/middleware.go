@@ -9,7 +9,6 @@ import (
 type MiddlewareItf interface {
 	Authentication(ctx *fiber.Ctx) error
 	UserStatus(ctx *fiber.Ctx) error
-	Ping(ctx *fiber.Ctx) error
 }
 
 type Middleware struct {
