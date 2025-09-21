@@ -1,0 +1,60 @@
+#!/bin/bash
+
+printf "%s\n" "setting up environment variables"
+
+printf "%s\n" "" >.env
+
+printf "LIMITER_MAX=%s\n" $LIMITER_MAX >>.env
+printf "LIMITER_EXPIRATION_MINUTES=%s\n" $LIMITER_EXPIRATION_MINUTES >>.env
+printf "BODY_LIMIT_MB=%s\n" $BODY_LIMIT_MB >>.env
+printf "ACCOUNT_REGISTRATION_CODE_DIGIT_COUNT=%s\n" $ACCOUNT_REGISTRATION_CODE_DIGIT_COUNT >>.env
+printf "PASSWORD_CHANGE_CODE_DIGIT_COUNT=%s\n" $PASSWORD_CHANGE_CODE_DIGIT_COUNT >>.env
+printf "PASSWORD_CHANGE_EXPIRY_MINUTES=%s\n" $PASSWORD_CHANGE_EXPIRY_MINUTES >>.env
+printf "PASSWORD_CHANGE_CODE_RETRY_SECONDS=%s\n" $PASSWORD_CHANGE_CODE_RETRY_SECONDS >>.env
+
+printf "APP_PORT=%s\n" $APP_PORT >>.env
+
+printf "DB_NAME=%s\n" $DB_NAME >>.env
+printf "DB_USERNAME=%s\n" $DB_USERNAME >>.env
+printf "DB_PASSWORD=%s\n" $DB_PASSWORD >>.env
+printf "DB_HOST=%s\n" $DB_HOST >>.env
+printf "DB_PORT=%s\n" $DB_PORT >>.env
+
+printf "S3_BUCKET_NAME=%s\n" $S3_BUCKET_NAME >>.env
+printf "S3_ACCOUNT_ID=%s\n" $S3_ACCOUNT_ID >>.env
+printf "S3_ACCESS_KEY_ID=%s\n" $S3_ACCESS_KEY_ID >>.env
+printf "S3_ACCESS_KEY_SECRET=%s\n" $S3_ACCESS_KEY_SECRET >>.env
+printf "S3_BUCKET_URL_PREFIX=%s\n" $S3_BUCKET_URL_PREFIX >>.env
+
+printf "JWT_SECRET_KEY=%s\n" $JWT_SECRET_KEY >>.env
+printf "JWT_EXPIRED_DAYS=%s\n" $JWT_EXPIRED_DAYS >>.env
+
+printf "EMAIL_FROM=%s\n" $EMAIL_FROM >>.env
+
+printf "SMTP_SERVER=%s\n" $SMTP_SERVER >>.env
+printf "SMTP_PORT=%s\n" $SMTP_PORT >>.env
+printf "SMTP_USERNAME=%s\n" $SMTP_USERNAME >>.env
+printf "SMTP_PASSWORD=%s\n" $SMTP_PASSWORD >>.env
+printf "SMTP_FROM=%s\n" $SMTP_FROM >>.env
+
+printf "MAILTRAP_URL=%s\n" $MAILTRAP_URL >>.env
+printf "MAILTRAP_TOKEN_ACCOUNT_REGISTRATION=%s\n" $MAILTRAP_TOKEN_ACCOUNT_REGISTRATION >>.env
+printf "MAILTRAP_TOKEN_PASSWORD_RESET=%s\n" $MAILTRAP_TOKEN_PASSWORD_RESET >>.env
+printf "MAILTRAP_TEMPLATE_ACCCOUNT_REGISTRATION=%s\n" $MAILTRAP_TEMPLATE_ACCCOUNT_REGISTRATION >>.env
+printf "MAILTRAP_TEMPLATE_PASSWORD_RESET=%s\n" $MAILTRAP_TEMPLATE_PASSWORD_RESET >>.env
+printf "MAILTRAP_COMPANY_INFO_NAME=%s\n" $MAILTRAP_COMPANY_INFO_NAME >>.env
+printf "MAILTRAP_COMPANY_INFO_ADDRESS=%s\n" $MAILTRAP_COMPANY_INFO_ADDRESS >>.env
+printf "MAILTRAP_COMPANY_INFO_CITY=%s\n" $MAILTRAP_COMPANY_INFO_CITY >>.env
+printf "MAILTRAP_COMPANY_INFO_ZIP_CODE=%s\n" $MAILTRAP_COMPANY_INFO_ZIP_CODE >>.env
+printf "MAILTRAP_COMPANY_INFO_COUNTRY=%s\n" $MAILTRAP_COMPANY_INFO_COUNTRY >>.env
+
+printf "WEBDAV_URL=%s\n" $WEBDAV_URL >>.env
+printf "WEBDAV_USER=%s\n" $WEBDAV_USER >>.env
+printf "WEBDAV_PASSWORD=%s\n" $WEBDAV_PASSWORD >>.env
+printf "WEBDAV_PATH=%s\n" $WEBDAV_PATH >>.env
+printf "WEBDAV_PERMISSION=%s\n" $WEBDAV_PERMISSION >>.env
+
+printf "%s\n" "done setting up environment variables"
+printf "%s\n" "starting application"
+
+./main

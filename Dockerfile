@@ -1,4 +1,4 @@
-FROM golang:latest
+FROM golang:alpine
 
 WORKDIR /app
 
@@ -8,4 +8,4 @@ RUN go mod download
 COPY . .
 RUN go build -o main app/main.go
 
-CMD ["./main"]
+CMD ["sh", "./startup.sh"]
