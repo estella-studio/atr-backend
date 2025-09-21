@@ -126,13 +126,6 @@ func (u *UserUseCase) Login(login dto.Login) (dto.ResponseLogin, string, error) 
 
 	_ = u.userRepo.GetUserInfo(&user)
 
-	go func() {
-		err := u.userRepo.UpdateLastActivity(user.ID)
-		if err != nil {
-			log.Println(err)
-		}
-	}()
-
 	return user.ParseToDTOResponseLogin(), token, nil
 }
 
