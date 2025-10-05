@@ -1,9 +1,8 @@
 services:
-  leon-backend:
-    image: syafa/leon-backend-test
-    container_name: leon-backend
+  atr-backend:
+    image: syafa/atr-backend:latest
+    container_name: atr-backend
     restart: always
-    network_mode: host
     environment:
       LIMITER_MAX: ${LIMITER_MAX}
       LIMITER_EXPIRATION_MINUTES: ${LIMITER_EXPIRATION_MINUTES}
@@ -41,10 +40,5 @@ services:
       MAILTRAP_COMPANY_INFO_CITY: ${MAILTRAP_COMPANY_INFO_CITY}
       MAILTRAP_COMPANY_INFO_ZIP_CODE: ${MAILTRAP_COMPANY_INFO_ZIP_CODE}
       MAILTRAP_COMPANY_INFO_COUNTRY: ${MAILTRAP_COMPANY_INFO_COUNTRY}
-      WEBDAV_URL: ${WEBDAV_URL}
-      WEBDAV_USER: ${WEBDAV_USER}
-      WEBDAV_PASSWORD: ${WEBDAV_PASSWORD}
-      WEBDAV_PATH: ${WEBDAV_PATH}
-      WEBDAV_PERMISSION: ${WEBDAV_PERMISSION}
     ports:
       - "8080:${APP_PORT}"
