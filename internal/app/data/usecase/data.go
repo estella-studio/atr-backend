@@ -1,10 +1,10 @@
 package usecase
 
 import (
-	"github.com/estella-studio/leon-backend/internal/app/data/repository"
-	"github.com/estella-studio/leon-backend/internal/domain/dto"
-	"github.com/estella-studio/leon-backend/internal/domain/entity"
-	"github.com/estella-studio/leon-backend/internal/infra/jwt"
+	"github.com/estella-studio/atr-backend/internal/app/data/repository"
+	"github.com/estella-studio/atr-backend/internal/domain/dto"
+	"github.com/estella-studio/atr-backend/internal/domain/entity"
+	"github.com/estella-studio/atr-backend/internal/infra/jwt"
 	"github.com/google/uuid"
 )
 

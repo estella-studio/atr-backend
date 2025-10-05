@@ -48,12 +48,6 @@ printf "MAILTRAP_COMPANY_INFO_CITY=%s\n" $MAILTRAP_COMPANY_INFO_CITY >>.env
 printf "MAILTRAP_COMPANY_INFO_ZIP_CODE=%s\n" $MAILTRAP_COMPANY_INFO_ZIP_CODE >>.env
 printf "MAILTRAP_COMPANY_INFO_COUNTRY=%s\n" $MAILTRAP_COMPANY_INFO_COUNTRY >>.env
 
-printf "WEBDAV_URL=%s\n" $WEBDAV_URL >>.env
-printf "WEBDAV_USER=%s\n" $WEBDAV_USER >>.env
-printf "WEBDAV_PASSWORD=%s\n" $WEBDAV_PASSWORD >>.env
-printf "WEBDAV_PATH=%s\n" $WEBDAV_PATH >>.env
-printf "WEBDAV_PERMISSION=%s\n" $WEBDAV_PERMISSION >>.env
-
 printf "%s\n" "done setting up environment variables"
 printf "%s\n" "starting application"
 

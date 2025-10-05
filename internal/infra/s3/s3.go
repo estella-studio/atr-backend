@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
-	"github.com/estella-studio/leon-backend/internal/infra/env"
+	"github.com/estella-studio/atr-backend/internal/infra/env"
 )
 
 type S3Itf interface {

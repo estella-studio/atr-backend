@@ -1,8 +1,8 @@
-name: ci
+name: ci-staging
 
 on:
-  push:
-    branches: [ "main" ]
+  pull_request:
+    branches: [ "*" ]
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: syafa/leon-backend:latest
+          tags: syafa/atr-backend:staging

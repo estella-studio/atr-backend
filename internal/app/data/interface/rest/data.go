@@ -9,13 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
-	userusecase "github.com/estella-studio/leon-backend/internal/app/user/usecase"
-	"github.com/estella-studio/leon-backend/internal/domain/dto"
-	"github.com/estella-studio/leon-backend/internal/infra/env"
-	"github.com/estella-studio/leon-backend/internal/infra/s3"
-	"github.com/estella-studio/leon-backend/internal/infra/webdav"
-	"github.com/estella-studio/leon-backend/internal/middleware"
+	datausecase "github.com/estella-studio/atr-backend/internal/app/data/usecase"
+	userusecase "github.com/estella-studio/atr-backend/internal/app/user/usecase"
+	"github.com/estella-studio/atr-backend/internal/domain/dto"
+	"github.com/estella-studio/atr-backend/internal/infra/env"
+	"github.com/estella-studio/atr-backend/internal/infra/s3"
+	"github.com/estella-studio/atr-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -27,7 +26,6 @@ type DataHandler struct {
 	DataUseCase datausecase.DataUseCaseItf
 	UserUseCase userusecase.UserUseCaseItf
 	Env         *env.Env
-	WebDAV      webdav.WebDAVItf
 	S3          s3.S3Itf
 }
 
@@ -35,7 +33,7 @@ func NewDataHandler(
 	routerGroup fiber.Router, validator *validator.Validate,
 	middleware middleware.MiddlewareItf, dataUseCase datausecase.DataUseCaseItf,
 	userUseCase userusecase.UserUseCaseItf, env *env.Env,
-	webdav webdav.WebDAVItf, s3 s3.S3Itf,
+	s3 s3.S3Itf,
 ) {
 	dataHandler := DataHandler{
 		Validator:   validator,
@@ -43,7 +41,6 @@ func NewDataHandler(
 		DataUseCase: dataUseCase,
 		UserUseCase: userUseCase,
 		Env:         env,
-		WebDAV:      webdav,
 		S3:          s3,
 	}
 
@@ -117,11 +114,6 @@ func (d *DataHandler) Add(ctx *fiber.Ctx) error {
 
 	go func() {
 		err = d.S3.Upload(context.Background(), add.ID.String(), byteContainer)
-		if err != nil {
-			log.Println(err)
-		}
-
-		err := d.WebDAV.Upload(add.UserID.String(), add.ID.String(), &byteContainer)
 		if err != nil {
 			log.Println(err)
 		}

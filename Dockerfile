@@ -1,6 +1,8 @@
-FROM golang:alpine
+FROM golang:latest
 
 WORKDIR /app
+
+RUN useradd -ms /bin/bash app && chown -R app:app /app
 
 COPY go.mod go.sum ./
 RUN go mod download

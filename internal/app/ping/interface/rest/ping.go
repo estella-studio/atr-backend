@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/estella-studio/leon-backend/internal/middleware"
+	"github.com/estella-studio/atr-backend/internal/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 

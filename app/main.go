@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/estella-studio/leon-backend/internal/bootstrap"
+	"github.com/estella-studio/atr-backend/internal/bootstrap"
 )
 
 func main() {

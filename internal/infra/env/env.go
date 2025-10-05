@@ -42,11 +42,6 @@ type Env struct {
 	MailtrapCompanyInfoCity             string `env:"MAILTRAP_COMPANY_INFO_CITY"`
 	MailtrapCompanyInfoZipCode          string `env:"MAILTRAP_COMPANY_INFO_ZIP_CODE"`
 	MailtrapCompanyInfoCountry          string `env:"MAILTRAP_COMPANY_INFO_COUNTRY"`
-	WebDAVURL                           string `env:"WEBDAV_URL"`
-	WebDavUser                          string `env:"WEBDAV_USER"`
-	WebDAVPassword                      string `env:"WEBDAV_PASSWORD"`
-	WebDAVPath                          string `env:"WEBDAV_PATH"`
-	WEbDAVPermission                    uint   `env:"WEBDAV_PERMISSION"`
 }
 
 func New() (*Env, error) {

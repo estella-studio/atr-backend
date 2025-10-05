@@ -3,7 +3,7 @@ package jwt
 import (
 	"time"
 
-	"github.com/estella-studio/leon-backend/internal/infra/env"
+	"github.com/estella-studio/atr-backend/internal/infra/env"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
