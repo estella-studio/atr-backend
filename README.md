@@ -1,6 +1,4 @@
-# LEON Backend
-
-[![wakatime](https://wakatime.com/badge/user/a36f3ff7-c578-475d-8b27-4320e7bfaf4a/project/014c01e4-fd4d-487a-b920-469c28fd6e24.svg)](https://wakatime.com/badge/user/a36f3ff7-c578-475d-8b27-4320e7bfaf4a/project/014c01e4-fd4d-487a-b920-469c28fd6e24)
+# A Thousand Rallies Backend
 
 ## Deploy
 
@@ -41,16 +39,24 @@ go build app/main.go
 
 ### Docker
 
+#### Use syafa/atr-backend
+
+```
+docker compose up -d
+```
+
+#### Manual Build
+
 - Build Docker Image
 
 ```
-docker build -t leon-backend:latest .
+docker build -t atr-backend:latest .
 ```
 
 - Run Docker Container
 
 ```
-docker run -d --name leon-backend --restart=always --network=host leon-backend:latest
+docker run -d --name atr-backend --restart=always --network=host atr-backend:latest
 ```
 
 - Run MySQL Container
@@ -62,7 +68,7 @@ docker run -d --name leon-backend --restart=always --network=host leon-backend:l
 docker run -d --name mysql -v mysql-volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=<your root password> -p 3306:3306 --restart=always mysql
 ```
 
-> Check server logs with `docker logs leon-backend`
+> Check logs with `docker logs atr-backend`
 
 ## API Docs
 
