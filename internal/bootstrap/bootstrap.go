@@ -5,20 +5,19 @@ import (
 	"log"
 	"time"
 
-	datahandler "github.com/estella-studio/leon-backend/internal/app/data/interface/rest"
-	datarepository "github.com/estella-studio/leon-backend/internal/app/data/repository"
-	datausecase "github.com/estella-studio/leon-backend/internal/app/data/usecase"
-	pinghandler "github.com/estella-studio/leon-backend/internal/app/ping/interface/rest"
-	userhandler "github.com/estella-studio/leon-backend/internal/app/user/interface/rest"
-	userrepository "github.com/estella-studio/leon-backend/internal/app/user/repository"
-	userusecase "github.com/estella-studio/leon-backend/internal/app/user/usecase"
-	"github.com/estella-studio/leon-backend/internal/infra/env"
-	"github.com/estella-studio/leon-backend/internal/infra/jwt"
-	"github.com/estella-studio/leon-backend/internal/infra/mailer"
-	"github.com/estella-studio/leon-backend/internal/infra/mysql"
-	"github.com/estella-studio/leon-backend/internal/infra/s3"
-	"github.com/estella-studio/leon-backend/internal/infra/webdav"
-	"github.com/estella-studio/leon-backend/internal/middleware"
+	datahandler "github.com/estella-studio/atr-backend/internal/app/data/interface/rest"
+	datarepository "github.com/estella-studio/atr-backend/internal/app/data/repository"
+	datausecase "github.com/estella-studio/atr-backend/internal/app/data/usecase"
+	pinghandler "github.com/estella-studio/atr-backend/internal/app/ping/interface/rest"
+	userhandler "github.com/estella-studio/atr-backend/internal/app/user/interface/rest"
+	userrepository "github.com/estella-studio/atr-backend/internal/app/user/repository"
+	userusecase "github.com/estella-studio/atr-backend/internal/app/user/usecase"
+	"github.com/estella-studio/atr-backend/internal/infra/env"
+	"github.com/estella-studio/atr-backend/internal/infra/jwt"
+	"github.com/estella-studio/atr-backend/internal/infra/mailer"
+	"github.com/estella-studio/atr-backend/internal/infra/mysql"
+	"github.com/estella-studio/atr-backend/internal/infra/s3"
+	"github.com/estella-studio/atr-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cache"
@@ -63,8 +62,6 @@ func Start() (*fiber.App, uint, error) {
 
 	mailer := mailer.NewMailer(config)
 
-	webdav := webdav.NewWebDAV(config)
-
 	s3Config := s3.NewS3(config)
 
 	app := fiber.New(
@@ -107,7 +104,7 @@ func Start() (*fiber.App, uint, error) {
 	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
-	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, userUseCase, config, webdav, s3Config)
+	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, userUseCase, config, s3Config)
 
 	log.Printf("listening on port %d", config.AppPort)
 

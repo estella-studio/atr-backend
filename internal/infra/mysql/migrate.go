@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"github.com/estella-studio/leon-backend/internal/domain/entity"
+	"github.com/estella-studio/atr-backend/internal/domain/entity"
 	"gorm.io/gorm"
 )
 

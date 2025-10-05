@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/estella-studio/leon-backend/internal/domain/dto"
-	"github.com/estella-studio/leon-backend/internal/domain/entity"
+	"github.com/estella-studio/atr-backend/internal/domain/dto"
+	"github.com/estella-studio/atr-backend/internal/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )

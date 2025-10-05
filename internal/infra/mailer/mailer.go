@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/estella-studio/leon-backend/internal/infra/env"
+	"github.com/estella-studio/atr-backend/internal/infra/env"
 	"github.com/google/uuid"
 	"gopkg.in/gomail.v2"
 )

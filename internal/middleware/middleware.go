@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"github.com/estella-studio/leon-backend/internal/app/user/repository"
-	"github.com/estella-studio/leon-backend/internal/infra/jwt"
+	"github.com/estella-studio/atr-backend/internal/app/user/repository"
+	"github.com/estella-studio/atr-backend/internal/infra/jwt"
 	"github.com/gofiber/fiber/v2"
 )
 

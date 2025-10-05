@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/estella-studio/leon-backend/internal/domain/dto"
+	"github.com/estella-studio/atr-backend/internal/domain/dto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
