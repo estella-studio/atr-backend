@@ -19,6 +19,12 @@ type Env struct {
 	DBPassword                          string `env:"DB_PASSWORD"`
 	DBHost                              string `env:"DB_HOST"`
 	DBPort                              uint   `env:"DB_PORT"`
+	RedisAddress                        string `env:"REDIS_ADDRESS"`
+	RedisPort                           uint   `env:"REDIS_PORT"`
+	RedisUsername                       string `env:"REDIS_USERNAME"`
+	RedisPassword                       string `env:"REDIS_PASSWORD"`
+	RedisDatabase                       int    `env:"REDIS_DATABASE"`
+	RedisExpiration                     int    `env:"REDIS_EXPIRATION"`
 	S3BucketName                        string `env:"S3_BUCKET_NAME"`
 	S3AccountID                         string `env:"S3_ACCOUNT_ID"`
 	S3AccessKeyID                       string `env:"S3_ACCESS_KEY_ID"`

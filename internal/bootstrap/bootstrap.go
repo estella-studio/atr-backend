@@ -16,6 +16,7 @@ import (
 	"github.com/estella-studio/atr-backend/internal/infra/jwt"
 	"github.com/estella-studio/atr-backend/internal/infra/mailer"
 	"github.com/estella-studio/atr-backend/internal/infra/mysql"
+	"github.com/estella-studio/atr-backend/internal/infra/redis"
 	"github.com/estella-studio/atr-backend/internal/infra/s3"
 	"github.com/estella-studio/atr-backend/internal/middleware"
 	"github.com/go-playground/validator/v10"
@@ -55,6 +56,8 @@ func Start() (*fiber.App, uint, error) {
 	} else {
 		log.Println("database migration complete")
 	}
+
+	redis, redisItf := redis.NewRedis(config)
 
 	val := validator.New()
 
@@ -101,7 +104,7 @@ func Start() (*fiber.App, uint, error) {
 	middleware := middleware.NewMiddleware(*jwt, userRepository)
 
 	pinghandler.NewPingHandler(v1, middleware)
-	userUseCase := userusecase.NewUserUseCase(userRepository, jwt)
+	userUseCase := userusecase.NewUserUseCase(userRepository, jwt, redis, redisItf, config.RedisExpiration)
 	userhandler.NewUserHandler(v1, val, middleware, userUseCase, config, mailer)
 	dataUseCase := datausecase.NewDataUseCase(dataRepository, jwt)
 	datahandler.NewDataHandler(v1, val, middleware, dataUseCase, userUseCase, config, s3Config)
