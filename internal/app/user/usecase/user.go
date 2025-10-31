@@ -1,7 +1,10 @@
 package usecase
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -9,7 +12,9 @@ import (
 	"github.com/estella-studio/atr-backend/internal/domain/dto"
 	"github.com/estella-studio/atr-backend/internal/domain/entity"
 	"github.com/estella-studio/atr-backend/internal/infra/jwt"
+	redisitf "github.com/estella-studio/atr-backend/internal/infra/redis"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -49,14 +54,22 @@ type UserUseCaseItf interface {
 }
 
 type UserUseCase struct {
-	userRepo repository.UserMySQLItf
-	jwt      jwt.JWTItf
+	userRepo        repository.UserMySQLItf
+	jwt             jwt.JWTItf
+	redis           *redis.Client
+	redisItf        redisitf.RedisItf
+	redisContext    context.Context
+	redisExpiration int
 }
 
-func NewUserUseCase(userRepo repository.UserMySQLItf, jwt *jwt.JWT) UserUseCaseItf {
+func NewUserUseCase(userRepo repository.UserMySQLItf, jwt *jwt.JWT, redis *redis.Client, redisItf redisitf.RedisItf, redisExpiration int) UserUseCaseItf {
 	return &UserUseCase{
-		userRepo: userRepo,
-		jwt:      jwt,
+		userRepo:        userRepo,
+		jwt:             jwt,
+		redis:           redis,
+		redisItf:        redisItf,
+		redisContext:    context.Background(),
+		redisExpiration: redisExpiration,
 	}
 }
 
@@ -335,11 +348,47 @@ func (u *UserUseCase) GetUserInfo(userID uuid.UUID) (dto.ResponseGetUserInfo, er
 		ID: userID,
 	}
 
-	err := u.userRepo.GetUserInfo(&user)
+	key := fmt.Sprintf("user:%s", userID.String())
+
+	result, err := u.redis.Get(u.redisContext, key).Result()
+	if err == nil && result != "" {
+		var out entity.User
+
+		err := json.Unmarshal([]byte(result), &out)
+		if err != nil {
+			log.Println(err)
+		}
+
+		go func() {
+			err = u.userRepo.GetUserInfo(&user)
+			if err != nil {
+				log.Println(err)
+			}
+
+			newData, err := json.Marshal(user)
+			if err != nil {
+				log.Println(err)
+			}
+
+			u.redisItf.Set(key, string(newData))
+		}()
+
+		return out.ParseToDTOResponseGetUserInfo(), nil
+	}
+
+	err = u.userRepo.GetUserInfo(&user)
 	if err != nil {
 		return dto.ResponseGetUserInfo{},
 			err
 	}
+
+	go func() {
+		newData, err := json.Marshal(user)
+		if err != nil {
+			log.Println(err)
+		}
+		u.redisItf.Set(key, string(newData))
+	}()
 
 	return user.ParseToDTOResponseGetUserInfo(), nil
 }
