@@ -20,6 +20,13 @@ printf "DB_PASSWORD=%s\n" $DB_PASSWORD >>.env
 printf "DB_HOST=%s\n" $DB_HOST >>.env
 printf "DB_PORT=%s\n" $DB_PORT >>.env
 
+printf "REDIS_ADDRESS=%s\n" $REDIS_ADDRESS >>.env
+printf "REDIS_PORT=%s\n" $REDIS_PORT >>.env
+printf "REDIS_USERNAME=%s\n" $REDIS_USERNAME >>.env
+printf "REDIS_PASSWORD=%s\n" $REDIS_PASSWORD >>.env
+printf "REDIS_DATABASE=%s\n" $REDIS_DATABASE >>.env
+printf "REDIS_EXPIRATION=%s\n" $REDIS_EXPIRATION >>.env
+
 printf "S3_BUCKET_NAME=%s\n" $S3_BUCKET_NAME >>.env
 printf "S3_ACCOUNT_ID=%s\n" $S3_ACCOUNT_ID >>.env
 printf "S3_ACCESS_KEY_ID=%s\n" $S3_ACCESS_KEY_ID >>.env
